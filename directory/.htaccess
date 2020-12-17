@@ -1,0 +1,9 @@
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+#    RewriteRule ^(.*)$ /demo/dev/directory/index.php?url=$1 [QSA,L]
+    RewriteRule ^(.*)$ /directory/index.php?url=$1 [QSA,L]
+</IfModule>

@@ -1,0 +1,20 @@
+create or replace view cp_list_all_users as
+select
+    ou.id as user_id
+     ,ou.first_name
+     ,ou.last_name
+     ,ou.email
+     ,ou.status as user_status
+     ,ou.level_1
+     ,ou.contact_type
+     ,ou.contact_license_type
+     ,ou.cp_notification
+     ,cda.agency_id
+     ,case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+    end as parent_agency
+     ,cda.agency_name
+     ,cda.partner_type
+from org_users ou join cp_directory_agency cda on ou.agency_id = cda.agency_id;

@@ -1,0 +1,129 @@
+create or replace view cp_search_items as
+select cas.agency_id, cas.note, caas.*
+from cp_all_agency_services caas
+    join cp_agency_services cas on caas.sub_item_2_id = cas.sub_item_2_id
+
+union
+
+select concat("L-",cas.location_id), cas.note, caas.*
+from cp_all_agency_services caas
+    join cp_agency_location_services cas on caas.sub_item_2_id = cas.sub_item_2_id;
+
+
+
+create or replace view cp_search_orgs_and_locations as
+select
+agency_id as id
+,agency_id as agency_id
+,case
+    when parent_agency = -1 then agency_id
+    else
+        parent_agency
+    end as parent_agency
+,agency_name
+,level_1
+,agency_address
+,agency_city
+,agency_state
+,agency_zipcode
+,agency_telephone
+,status
+,partner_type
+,'ORG' as org_type
+from cp_directory_agency
+
+union
+
+select
+concat('L-',id) as id
+,(select cda.agency_id
+    from cp_directory_agency cda
+    where ab.agency_id = cda.agency_id) as agency_id
+,(select
+         case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+          end
+    from cp_directory_agency cda
+    where ab.agency_id = cda.agency_id) as parent_agency
+,location_name
+,level_1
+,address
+,city
+,state
+,zip_code
+,phone
+,(select cda.status
+    from cp_directory_agency cda
+    where ab.agency_id = cda.agency_id) as status
+,(select cda.partner_type
+    from cp_directory_agency cda
+    where ab.agency_id = cda.agency_id) as partner_type
+,'LOCATION' as org_type
+from cp_directory_agency_locations ab;
+
+
+create or replace view cp_org_user_report as
+select
+    cda.agency_id
+     ,case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+    end as parent_agency
+     ,cda.agency_name
+     ,cda.level_1 as org_level_1
+     ,cda.status as agency_status
+     ,ou.first_name
+     ,ou.last_name
+     ,ou.email
+     ,ou.level_1 as user_level_1
+     ,ou.status as user_status
+     ,ou.contact_type
+     ,ou.login_date
+     ,case when ou.cp_notification is null then 'NO'
+           else
+               ou.cp_notification
+    end as cp_notification
+from cp_directory_agency cda
+         join org_users ou on cda.agency_id = ou.agency_id;
+
+
+
+# create table if not exists cp_print_friendly_search
+# (
+#     id               varchar(50)          null,
+#     agency_id        int          null,
+#     parent_agency    int          null,
+#     agency_name      varchar(255) null,
+#     level_1          tinytext     null,
+#     contacts         tinytext     null,
+#     agency_address   varchar(255) null,
+#     agency_city      varchar(255) null,
+#     agency_state     varchar(255) null,
+#     agency_zipcode   varchar(255) null,
+#     agency_telephone varchar(255) null,
+#     status           varchar(50)  null,
+#     partner_type     tinytext     null,
+#     org_type         varchar(50)  null,
+#     resource_type    varchar(50)  null,
+#     item_name        tinytext     null,
+#     FULLTEXT(agency_name
+#         ,level_1
+#         ,contacts
+#         ,agency_city
+#         ,agency_state
+#         ,agency_zipcode
+#         ,agency_telephone
+#         ,partner_type
+#         ,org_type
+#         ,resource_type
+#         ,item_name)
+# ) ENGINE=InnoDB;
+#
+# create index cp_print_friendly_search_agyId_index
+#     on cp_print_friendly_search (agency_id);
+#
+# create index cp_print_friendly_search_parent_index
+#     on cp_print_friendly_search (parent_agency);

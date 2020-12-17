@@ -1,0 +1,85 @@
+create table cp_custom_item_name
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    item_id          int          null,
+    custom_item_name varchar(200) null,
+    updated_by       varchar(100) null,
+    updated_date     datetime     null
+);
+
+create index cp_custom_item_name_agency_index
+    on cp_custom_item_name (agency_id);
+
+create index cp_custom_item_name_parent_index
+    on cp_custom_item_name (parent_agency_id);
+
+create index cp_custom_item_name_item_index
+    on cp_custom_item_name (item_id);
+
+
+alter table cp_directory_agency_locations
+    add status varchar(50) null after services;
+
+update cp_directory_agency_locations set `status` = 'ACTIVE';
+
+
+create or replace view cp_search_orgs_and_locations as
+select
+    agency_id as id
+     ,agency_id as agency_id
+     ,case
+          when parent_agency = -1 then agency_id
+          else
+              parent_agency
+    end as parent_agency
+     ,agency_name
+     ,level_1
+     ,agency_address
+     ,agency_city
+     ,agency_state
+     ,agency_zipcode
+     ,agency_telephone
+     ,status
+     ,partner_type
+     ,'ORG' as org_type
+from cp_directory_agency
+
+union
+
+select
+    concat('L-',id) as id
+     ,(select cda.agency_id
+       from cp_directory_agency cda
+       where ab.agency_id = cda.agency_id) as agency_id
+     ,(select
+           case
+               when cda.parent_agency = -1 then cda.agency_id
+               else
+                   cda.parent_agency
+               end
+       from cp_directory_agency cda
+       where ab.agency_id = cda.agency_id) as parent_agency
+     ,location_name
+     ,level_1
+     ,address
+     ,city
+     ,state
+     ,zip_code
+     ,phone
+     ,status
+     ,(select cda.partner_type
+       from cp_directory_agency cda
+       where ab.agency_id = cda.agency_id) as partner_type
+     ,'LOCATION' as org_type
+from cp_directory_agency_locations ab;
+
+
+
+alter table cp_events_calendar
+    add event_end_time varchar(50) null after event_time;
+
+#Above Ran on Prod 06-11-2020
+

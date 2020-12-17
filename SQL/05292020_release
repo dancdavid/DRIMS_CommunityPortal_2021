@@ -1,0 +1,78 @@
+create table cp_events_calendar_file_upload
+(
+    id            int auto_increment
+        primary key,
+    event_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null
+);
+
+create index event_id_index
+    on cp_events_calendar_file_upload (event_id);
+
+create table cp_team_events_calendar_file_upload
+(
+    id            int auto_increment
+        primary key,
+    event_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null
+);
+
+create index event_id_index
+    on cp_team_events_calendar_file_upload (event_id);
+
+create table cp_team_message_board_file_upload
+(
+    id            int auto_increment
+        primary key,
+    message_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null
+);
+
+create index message_id_index
+    on cp_team_message_board_file_upload (message_id);
+
+create table cp_message_board_file_upload
+(
+    id            int auto_increment
+        primary key,
+    message_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null
+);
+
+create index event_id_index
+    on cp_message_board_file_upload (message_id);
+
+
+create table cp_contact_us
+(
+    parent_agency_id int          not null
+        primary key,
+    contact_us_email varchar(100) null,
+    turn_on          varchar(20)  null,
+    update_date      datetime     null,
+    update_by        varchar(100) null
+);

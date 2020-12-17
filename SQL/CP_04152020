@@ -1,0 +1,861 @@
+insert into drop_down_menu (field_name, list) values ('cp_user_type', 'ADMIN;USER');
+
+-- --------------------------------------------------------
+
+alter table org_users
+    add community_portal boolean null;
+
+alter table org_users
+    add case_management boolean null;
+
+alter table org_users
+    add agency_id int null;
+
+alter table org_users
+    add community_portal_user_type varchar(50) null;
+
+alter table org_users
+    add contact_type varchar(255) null;
+
+alter table org_users
+    add level_1 mediumtext null;
+
+# alter table org_users
+#     add agency_level int null;
+
+alter table org_users
+    add cp_user_level int null;
+
+alter table org_users
+    add contact_license_type tinytext null;
+
+alter table org_users alter column community_portal set default 0;
+
+create index agency_id_idx
+    on org_users (agency_id);
+
+alter table org_users
+    add extension varchar(10) null after phone;
+
+alter table org_users
+    add cp_notification varchar(5) null;
+
+
+update org_users set case_management = 1;
+update org_users set community_portal = 0;
+
+-- --------------------------------------------------------
+
+alter table org_information
+    add community_portal boolean null;
+
+alter table org_information
+    add case_management boolean null;
+
+update org_information set case_management = 1;
+update org_information set community_portal = 0;
+
+-- --------------------------------------------------------
+
+
+
+create table if not exists cp_agency_logo
+(
+    agency_id     int          not null
+        primary key,
+    filename      varchar(200) not null,
+    type          varchar(100) not null,
+    date_uploaded datetime     not null,
+    uploaded_by   varchar(255) not null
+);
+
+
+create table if not exists cp_contact_license_type
+(
+    id                   int auto_increment
+        primary key,
+    agency_id            int          null,
+    contact_license_type varchar(255) null,
+    parent_agency_id     int          null,
+    status               varchar(25)  null,
+    update_by            varchar(25)  null,
+    update_date          datetime     null
+);
+
+create index clt_agency_id_idx
+    on cp_contact_license_type (agency_id);
+
+create index clt_parent_id_idx
+    on cp_contact_license_type (parent_agency_id);
+
+
+create table if not exists cp_contact_types
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    contact_type     varchar(200) null,
+    status           varchar(25)  null,
+    update_by        int          null,
+    update_date      datetime     null
+);
+
+create index agency_id_idx
+    on cp_contact_types (agency_id);
+
+create index parent_agency_idx
+    on cp_contact_types (parent_agency_id);
+
+
+create table if not exists cp_dashboard_links
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    title            varchar(100) null,
+    url              mediumtext   null,
+    description      varchar(255) null,
+    status           varchar(25)  null,
+    level_1          tinytext     null,
+    update_by        varchar(25)  null,
+    update_date      datetime     null
+);
+
+create index agency_id_idx
+    on cp_dashboard_links (agency_id);
+
+create index parent_agent_id_idx
+    on cp_dashboard_links (parent_agency_id);
+
+
+
+
+create table if not exists cp_directory_agency
+(
+    agency_id        int(10) auto_increment
+        primary key,
+    parent_agency    int                     null,
+    agency_name      varchar(255)            null,
+    agency_address   varchar(255)  null,
+    agency_city      varchar(255)  null,
+    agency_state     varchar(255)  null,
+    agency_zipcode   varchar(255)  null,
+    agency_telephone varchar(255)  null,
+    agency_fax       varchar(255)  null,
+    agency_url       varchar(255)  null,
+    agency_uname     varchar(255)  null,
+    agency_password  varchar(255)  null,
+    agency_sessionid varchar(255)  null,
+    user_type        varchar(255)  null,
+    disaster_address varchar(255)  null,
+    disaster_city    varchar(255)  null,
+    disaster_state   varchar(255)  null,
+    disaster_zipcode varchar(255)  null,
+    a_longitude      varchar(255)  null,
+    a_latitude       varchar(255)  null,
+    agency_gps       varchar(255)  null,
+    status           varchar(50)             null,
+    description      longtext                null,
+    agency_level     int                     null,
+    parent_org_id    int                     null,
+    created_by       varchar(50)             null,
+    created_date     datetime                null,
+    updated_by       varchar(50)             null,
+    updated_date     datetime                null,
+    level_1          tinytext                null,
+    partner_type     tinytext                null
+);
+
+create index parent_agency_id_idx
+    on cp_directory_agency (parent_agency);
+
+create index parent_agency_idx
+    on cp_directory_agency (parent_agency);
+
+create index parent_org_id_idx
+    on cp_directory_agency (parent_org_id);
+
+
+create table if not exists cp_directory_agency_locations
+(
+    id            int auto_increment
+        primary key,
+    agency_id     int          null,
+    location_name varchar(200) null,
+    address       varchar(200) null,
+    city          varchar(100) null,
+    state         varchar(100) null,
+    zip_code      varchar(25)  null,
+    phone         varchar(25)  null,
+    fax           varchar(25)  null,
+    level_1       tinytext     null,
+    services      tinytext     null,
+    update_by     int          null,
+    update_date   datetime     null
+);
+
+create index agency_id_idx
+    on cp_directory_agency_locations (agency_id);
+
+
+
+create table if not exists cp_events_calendar
+(
+    id                int auto_increment
+        primary key,
+    event_title       varchar(255) null,
+    event_description mediumtext   null,
+    event_address     varchar(255) null,
+    event_city        varchar(100) null,
+    event_state       varchar(100) null,
+    event_zip         varchar(50)  null,
+    event_date        date         null,
+    event_time        varchar(50)  null,
+    status            varchar(50)  null,
+    submitted_by      varchar(200) null,
+    timestamp         datetime     null,
+    level_1           varchar(100) null,
+    agency_id         int          null,
+    parent_agency_id  int          null,
+    update_by         varchar(25)  null,
+    update_date       datetime     null
+);
+
+create index agency_id_idx
+    on cp_events_calendar (agency_id);
+
+create index parent_agency_id_idx
+    on cp_events_calendar (parent_agency_id);
+
+
+create table if not exists cp_file_upload
+(
+    id            int auto_increment
+        primary key,
+    agency_id     int          null,
+    parent_agency int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null,
+    level_1       tinytext     null
+);
+
+
+create table if not exists cp_level_1
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    level_1          varchar(255) null,
+    status           varchar(25)  null,
+    update_by        varchar(25)  null,
+    update_date      datetime     null
+);
+
+create index agency_id_idx
+    on cp_level_1 (agency_id);
+
+create index parent_id_idx
+    on cp_level_1 (parent_agency_id);
+
+
+create table if not exists cp_message_board
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    title            varchar(255) null,
+    message          longtext     null,
+    timestamp        datetime     null,
+    submitted_by     varchar(200) null,
+    status           varchar(255) null,
+    level_1          varchar(100) null,
+    update_by        varchar(25)  null,
+    update_date      datetime     null
+);
+
+create index agency_id_idx
+    on cp_message_board (agency_id);
+
+create index parent_agency_id_idx
+    on cp_message_board (parent_agency_id);
+
+
+
+create table if not exists cp_partner_types
+(
+    id               int auto_increment
+        primary key,
+    agency_id        int          null,
+    parent_agency_id int          null,
+    partner_type     varchar(200) null,
+    status           varchar(25)  null,
+    update_by        int          null,
+    update_date      datetime     null
+);
+
+create index agency_id_idx
+    on cp_partner_types (agency_id);
+
+create index parent_agency_idx
+    on cp_partner_types (parent_agency_id);
+
+
+alter table cp_events_calendar
+    add url tinytext null after level_1;
+
+-- --------------------------------------------------------
+# FIND_IN_WILD_SET and FIND_WILD_IN_SET
+#
+# Two functions that work just like FIND_IN_SET, but support the % wildcard.
+#
+# SELECT FIND_WILD_IN_SET('%tack', 'haystack,bale,heap,needle,pile');
+# SELECT FIND_IN_WILD_SET('pin', 'haystack,bale,heap,needle,pi%');
+#
+# DROP FUNCTION IF EXISTS FIND_IN_WILD_SET;
+# DROP FUNCTION IF EXISTS FIND_WILD_IN_SET;
+
+
+DELIMITER //
+
+CREATE FUNCTION FIND_IN_WILD_SET(theString text, theSet text)
+RETURNS boolean
+DETERMINISTIC
+BEGIN
+
+DECLARE delimiterCount int;
+DECLARE pos int DEFAULT 0;
+DECLARE setElement text;
+DECLARE returnValue boolean DEFAULT FALSE;
+
+SET delimiterCount := CHARACTER_LENGTH(theSet) - CHARACTER_LENGTH(REPLACE(theSet, ',', ''));
+
+WHILE (pos <= delimiterCount) DO
+    BEGIN
+        SET setElement := SUBSTRING_INDEX(SUBSTRING_INDEX(theSet, ',', pos+1), ',', -1);
+        SET returnValue := returnValue OR (theString LIKE setElement);
+        SET pos := pos + 1;
+
+    END;
+END WHILE;
+
+
+RETURN returnValue;
+
+END//
+
+CREATE FUNCTION FIND_WILD_IN_SET(theString text, theSet text)
+RETURNS boolean
+DETERMINISTIC
+BEGIN
+
+DECLARE delimiterCount int;
+DECLARE pos int DEFAULT 0;
+DECLARE setElement text;
+DECLARE returnValue boolean DEFAULT FALSE;
+
+SET delimiterCount := CHARACTER_LENGTH(theSet) - CHARACTER_LENGTH(REPLACE(theSet, ',', ''));
+
+WHILE (pos <= delimiterCount) DO
+    BEGIN
+        SET setElement := SUBSTRING_INDEX(SUBSTRING_INDEX(theSet, ',', pos+1), ',', -1);
+        SET returnValue := returnValue OR (setElement LIKE theString);
+        SET pos := pos + 1;
+
+    END;
+END WHILE;
+
+
+RETURN returnValue;
+
+END//
+
+DELIMITER ;
+
+
+-- -----------04 16 2020------------------
+insert into drop_down_menu (field_name, list) values ('cp_user_status', 'ACTIVE;IN-ACTIVE');
+
+-- -----------TEAM------------------
+create table cp_teams
+(
+    id int auto_increment,
+    parent_agency_id int null,
+    team_name varchar(100) null,
+    description varchar(200) null,
+    status varchar(25) null,
+    created_by varchar(25) null,
+    created_date datetime null,
+    update_by varchar(25) null,
+    update_date datetime null,
+    constraint cp_teams_pk
+        primary key (id)
+);
+
+create index cp_teams_parent_index
+    on cp_teams (parent_agency_id);
+
+alter table cp_teams
+    add level_1 tinytext null after status;
+
+
+create table cp_team_members
+(
+    id int auto_increment,
+    team_id int null,
+    user_id int null,
+    role varchar(25) null,
+    status varchar(25) null,
+    update_by varchar(25) null,
+    update_date datetime null,
+    constraint cp_team_members_pk
+        primary key (id)
+);
+
+create index cp_team_members_userid_index
+    on cp_team_members (user_id);
+
+
+create table if not exists cp_team_message_board
+(
+    id               int auto_increment
+        primary key,
+    team_id        int          null,
+    title            varchar(255) null,
+    message          longtext     null,
+    timestamp        datetime     null,
+    submitted_by     varchar(200) null,
+    status           varchar(255) null,
+    level_1          varchar(100) null,
+    update_by        varchar(25)  null,
+    update_date      datetime     null
+);
+
+create index team_id_message_idx
+    on cp_team_message_board (team_id);
+
+
+create table if not exists cp_team_file_upload
+(
+    id            int auto_increment
+        primary key,
+    team_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null,
+    level_1       tinytext     null
+);
+
+create index team_id_file_upload_idx
+    on cp_team_file_upload (team_id);
+
+create table if not exists cp_team_file_upload
+(
+    id            int auto_increment
+        primary key,
+    team_id     int          null,
+    file_name     varchar(100) null,
+    title         varchar(50)  null,
+    type          varchar(100) null,
+    description   varchar(200) null,
+    upload_date   datetime     null,
+    upload_by     varchar(50)  null,
+    status        varchar(25)  null,
+    level_1       tinytext     null
+);
+
+create table if not exists cp_team_dashboard_links
+(
+    id               int auto_increment
+        primary key,
+    team_id        int          null,
+    title            varchar(100) null,
+    url              mediumtext   null,
+    description      varchar(255) null,
+    status           varchar(25)  null,
+    level_1          tinytext     null,
+    update_by        varchar(25)  null,
+    update_date      datetime     null
+);
+
+create index team_id_links_idx
+    on cp_team_dashboard_links (team_id);
+
+
+
+create table if not exists cp_team_events_calendar
+(
+    id                int auto_increment
+        primary key,
+    event_title       varchar(255) null,
+    event_description mediumtext   null,
+    event_address     varchar(255) null,
+    event_city        varchar(100) null,
+    event_state       varchar(100) null,
+    event_zip         varchar(50)  null,
+    event_date        date         null,
+    event_time        varchar(50)  null,
+    status            varchar(50)  null,
+    submitted_by      varchar(200) null,
+    timestamp         datetime     null,
+    level_1           varchar(100) null,
+    url               tinytext     null,
+    agency_id         int          null,
+    team_id           int          null,
+    update_by         varchar(25)  null,
+    update_date       datetime     null
+);
+
+create index agency_id_idx
+    on cp_team_events_calendar (agency_id);
+
+create index team_id_idx
+    on cp_team_events_calendar (team_id);
+
+
+-- -----------SERVICES------------------
+insert into drop_down_menu (field_name, list) values ('cp_services', 'SERVICE;TRAINING;RESOURCES');
+
+create table cp_services
+(
+    id int auto_increment,
+    parent_agency_id int null,
+    category varchar(25) null,
+    type tinytext null,
+    description tinytext null,
+    status varchar(25) null,
+    update_by int null,
+    update_date datetime null,
+    constraint cp_services_item_pk
+        primary key (id)
+);
+
+create index cp_services_item_parent_agency_index
+    on cp_services (parent_agency_id);
+
+
+create table cp_services_item
+(
+    id               int auto_increment
+        primary key,
+    parent_agency_id int         null,
+    service_id       int         null,
+    item             tinytext    null,
+    status           varchar(25) null,
+    update_by        varchar(25) null,
+    update_date      datetime    null
+);
+
+create index cp_services_item_1_item_index
+    on cp_services_item (service_id);
+
+create index cp_services_item_1_parent_index
+    on cp_services_item (parent_agency_id);
+
+
+create table cp_services_sub_item
+(
+    id               int auto_increment
+        primary key,
+    parent_agency_id int         null,
+    item_id          int         null,
+    service_id        int         null,
+    sub_item           tinytext    null,
+    description      tinytext    null,
+    status           varchar(25) null,
+    update_by        varchar(25) null,
+    update_date      datetime    null
+);
+
+create index cp_services_item_2_item_index
+    on cp_services_sub_item (item_id);
+
+create index cp_services_item_2_parent_index
+    on cp_services_sub_item (parent_agency_id);
+
+create index cp_services_item_index
+    on cp_services_sub_item (service_id);
+
+
+create table cp_services_sub_item_2
+(
+    id               int auto_increment
+        primary key,
+    parent_agency_id int         null,
+    sub_item_id         int         null,
+    service_id        int         null,
+    sub_item_2          tinytext    null,
+    description      tinytext    null,
+    status           varchar(25) null,
+    update_by        varchar(25) null,
+    update_date      datetime    null
+);
+
+create index cp_services_item_3_item_index
+    on cp_services_sub_item_2 (sub_item_id);
+
+create index cp_services_item_3_parent_index
+    on cp_services_sub_item_2 (parent_agency_id);
+
+create index cp_services_item_3_index
+    on cp_services_sub_item_2 (service_id);
+
+
+-- -----------SERVICES AGENCY------------------
+
+create table cp_agency_services
+(
+    id int auto_increment,
+    agency_id int null,
+    parent_agency_id int null,
+    sub_item_2_id int null,
+    constraint cp_agency_services_pk
+        primary key (id)
+);
+
+create index cp_agency_services_agency_id_index
+    on cp_agency_services (agency_id);
+
+create index cp_agency_services_sub_id_index
+    on cp_agency_services (sub_item_2_id);
+
+alter table cp_agency_services
+    add note varchar(250) null;
+
+
+create table cp_agency_location_services
+(
+    id int auto_increment,
+    agency_id int null,
+    location_id int null,
+    sub_item_2_id int null,
+    constraint cp_agency_location_services_pk
+        primary key (id)
+);
+
+create index cp_agency_location_services_agency_id_index
+    on cp_agency_location_services (agency_id);
+
+create index cp_agency_location_services_sub_id_index
+    on cp_agency_location_services (sub_item_2_id);
+
+alter table cp_agency_location_services
+    add note varchar(250) null;
+
+-- ----------- Label Level 1------------------
+
+create table cp_level_1_label
+(
+    parent_agency_id int not null,
+    label varchar(25) null,
+    update_by varchar(50) null,
+    update_date datetime null,
+    constraint cp_level_1_label_pk
+        primary key (parent_agency_id)
+);
+
+
+-- -----------VIEW------------------
+
+create or replace view cp_list_all_users as
+select
+    ou.id as user_id
+     ,ou.first_name
+     ,ou.last_name
+     ,ou.email
+     ,ou.status as user_status
+     ,ou.level_1
+     ,ou.cp_notification
+     ,cda.agency_id
+     ,case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+    end as parent_agency
+     ,cda.agency_name
+from org_users ou join cp_directory_agency cda on ou.agency_id = cda.agency_id;
+
+
+create or replace view cp_complete_team_members_list as
+select
+    ou.id as user_id
+     ,ou.first_name
+     ,ou.last_name
+     ,ou.email
+     ,cda.agency_id
+     ,cda.agency_name
+     ,case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+    end as parent_agency_id
+     ,ctm.team_id
+     ,ctm.status
+     ,ctm.role
+     ,ctm.id as team_member_id
+from org_users ou join
+     cp_directory_agency cda on ou.agency_id = cda.agency_id join
+     cp_team_members ctm on ou.id = ctm.user_id;
+
+
+create or replace view cp_all_agency_services as
+select
+    cs.parent_agency_id
+     ,cs.id as service_id
+     ,cs.category
+     ,cs.type
+     ,cs.description
+     ,cs.status
+     ,csi.id as item_id
+     ,csi.item
+     ,csi.status as item_status
+     ,cssi.id as sub_item_id
+     ,cssi.sub_item
+     ,cssi.status as sub_item_status
+     ,cssii.id as sub_item_2_id
+     ,cssii.sub_item_2
+     ,cssii.status as sub_item_2_status
+from cp_services cs
+         join cp_services_item csi on cs.id = csi.service_id
+         left join cp_services_sub_item cssi on csi.id = cssi.item_id
+         left join cp_services_sub_item_2 cssii on cssi.id = cssii.sub_item_id;
+
+
+# create or replace view cp_search_view as
+# select
+#     cpa.agency_id
+#      ,case
+#           when cpa.parent_agency = -1 then cpa.agency_id
+#           else
+#               cpa.parent_agency
+#     end as parent_agency_id
+#      ,cpa.agency_name
+#      ,cpa.agency_address
+#      ,cpa.agency_city
+#      ,cpa.agency_state
+#      ,cpa.agency_zipcode
+#      ,cpa.agency_telephone
+#      ,ou.first_name
+#      ,ou.last_name
+#      ,concat_ws(",", cpa.agency_name, ou.first_name, ou.last_name) as searchfield
+# from cp_directory_agency cpa join org_users ou on cpa.agency_id = ou.agency_id;
+
+
+create or replace view cp_search_view as
+select
+    cpa.agency_id
+     ,case
+          when cpa.parent_agency = -1 then cpa.agency_id
+          else
+              cpa.parent_agency
+    end as parent_agency
+     ,cpa.agency_name
+     ,cpa.agency_address
+     ,cpa.agency_city
+     ,cpa.agency_state
+     ,cpa.agency_zipcode
+     ,cpa.agency_telephone
+     ,ou.first_name
+     ,ou.last_name
+     , caas.*
+     ,concat_ws(",",
+                replace(cpa.agency_name, ' ',','),
+                ou.first_name,
+                ou.last_name,
+                caas.category,
+                replace(caas.type, ' ' ,','),
+                replace(caas.item, ' ' , ',')) as searchfield
+from org_users ou
+         join cp_directory_agency cpa on ou.agency_id = cpa.agency_id
+         left join cp_agency_services cas on cpa.agency_id = cas.agency_id
+         left join cp_all_agency_services caas on cas.sub_item_2_id = caas.sub_item_2_id;
+
+
+-- -----------REPORTS------------------
+create or replace view cp_org_report as
+select
+    agency_id
+     ,case
+          when parent_agency = -1 then agency_id
+          else
+              parent_agency
+    end as parent_agency
+     , agency_name
+     , agency_address
+     , agency_city
+     , agency_state
+     , agency_zipcode
+     , status
+     , agency_level
+     , parent_org_id
+     , level_1
+     , partner_type
+from cp_directory_agency;
+
+
+create or replace view cp_org_user_report as
+select
+    cda.agency_id
+     ,case
+          when cda.parent_agency = -1 then cda.agency_id
+          else
+              cda.parent_agency
+    end as parent_agency
+     ,cda.agency_name
+     ,cda.level_1 as org_level_1
+     ,cda.status as agency_status
+     ,ou.first_name
+     ,ou.last_name
+     ,ou.email
+     ,ou.level_1 as user_level_1
+     ,ou.status as user_status
+     ,ou.contact_type
+     ,ou.login_date
+from cp_directory_agency cda
+         join org_users ou on cda.agency_id = ou.agency_id;
+
+
+
+create or replace view cp_agency_services_report as
+select cda.agency_id, cda.agency_name, cda.level_1, caas.*
+from cp_agency_services cas
+         join cp_directory_agency cda on cas.agency_id = cda.agency_id
+         join cp_all_agency_services caas on cas.sub_item_2_id = caas.sub_item_2_id;
+
+
+create or replace view cp_view_agency_services_test as
+select cda.agency_id, cda.agency_name, cda.level_1, caas.*, cas.note
+from cp_agency_services cas
+         join cp_directory_agency cda on cas.agency_id = cda.agency_id
+         join cp_all_agency_services caas on cas.sub_item_2_id = caas.sub_item_2_id;
+
+
+
+create or replace view cp_view_agency_location_services_test as
+select cas.location_id, cda.agency_id, cda.agency_name, cda.level_1, caas.*, cas.note
+from cp_agency_location_services cas
+         join cp_directory_agency cda on cas.agency_id = cda.agency_id
+         join cp_all_agency_services caas on cas.sub_item_2_id = caas.sub_item_2_id;
+
+
+
+
+
+
+
+
+
+
+

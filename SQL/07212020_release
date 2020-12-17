@@ -1,0 +1,26 @@
+alter table cp_agency_services
+	add service_id int null after parent_agency_id;
+
+create index cp_agency_services_parentId_index
+	on cp_agency_services (parent_agency_id);
+
+create index cp_agency_services_serviceId_index
+	on cp_agency_services (service_id);
+
+
+alter table cp_custom_item_name
+	add service_id int null after parent_agency_id;
+
+create index cp_custom_item_name_serviceId_index
+	on cp_custom_item_name (service_id);
+
+
+alter table cp_agency_location_services
+	add service_id int null after location_id;
+
+create index cp_agency_location_services_locationId_index
+	on cp_agency_location_services (location_id);
+
+create index cp_agency_location_services_serviceId_index
+	on cp_agency_location_services (service_id);
+

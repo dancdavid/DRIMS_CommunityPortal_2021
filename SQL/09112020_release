@@ -1,0 +1,2 @@
+alter table cp_team_events_calendar
+    add event_end_time varchar(50) null after event_time;

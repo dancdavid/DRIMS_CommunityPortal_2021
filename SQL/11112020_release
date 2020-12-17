@@ -1,0 +1,21 @@
+ALTER TABLE `cp_events_calendar` ADD `timezone` VARCHAR(75) NULL DEFAULT NULL AFTER `event_end_time`;
+ALTER TABLE `cp_team_events_calendar` ADD `timezone` VARCHAR(75) NULL DEFAULT NULL AFTER `event_end_time`;
+
+
+================================================24-11-2020===============================================
+
+ALTER TABLE `cp_events_calendar` ADD `is_reoccuring` ENUM('0','1') NOT NULL DEFAULT '0' COMMENT '0=not reoccuring, 1=reoccuring' AFTER `update_by`, ADD `event_reoccuring_type` ENUM('Daily','Weekly','Weekly Day','Monthly') NULL DEFAULT NULL AFTER `is_reoccuring`, ADD `event_reoccuring_days` VARCHAR(50) NULL DEFAULT NULL COMMENT 'if event reoccuring type weekdays' AFTER `event_reoccuring_type`
+
+
+
+=================================================26-11-2020============================================
+
+
+ALTER TABLE `cp_team_events_calendar` ADD `is_reoccuring` ENUM('0','1') NOT NULL DEFAULT '0' COMMENT '0=not reoccuring, 1=reoccuring' AFTER `update_by`, ADD `event_reoccuring_type` ENUM('Daily','Weekly','Weekly Day','Monthly') NULL DEFAULT NULL AFTER `is_reoccuring`, ADD `event_reoccuring_days` VARCHAR(50) NULL DEFAULT NULL COMMENT 'if event reoccuring type weekdays' AFTER `event_reoccuring_type`
+
+
+
+=================================================02-12-2020============================================
+ALTER TABLE `cp_events_calendar` ADD `event_end_date` DATE NULL DEFAULT NULL COMMENT 'only in case of reoccurring ' AFTER `event_reoccuring_days`;
+
+ALTER TABLE `cp_team_events_calendar` ADD `event_end_date` DATE NULL DEFAULT NULL COMMENT 'only in case of reoccurring ' AFTER `event_reoccuring_days`

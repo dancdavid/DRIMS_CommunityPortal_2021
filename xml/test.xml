@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root>
+    <payee>
+        <id>4</id>
+        <name>Best Buy</name>
+        <account_number>1234 1234 1234 1234</account_number>
+    </payee>
+</root>
