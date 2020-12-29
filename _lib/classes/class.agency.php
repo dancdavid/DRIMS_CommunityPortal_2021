@@ -32,7 +32,7 @@ class agency
 
     public function getUserAccess($user_id){
         $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.cp_org_id, 
-        org_contacts.status, org_contacts.cp_user_level , org_users.default_org_id, org_users.community_portal,
+        org_contacts.status, org_contacts.cp_access_level , org_users.default_org_id, org_users.community_portal,
         org_users.case_management , org_information.name as org_name, org_information.community_portal as org_community_portal, org_information.case_management as org_case_management
         from org_contacts 
         left join org_users  on org_contacts.user_id = org_users.id
@@ -280,7 +280,10 @@ class agency
     public function get_agency($agency_id)
     {
         $dbh = $this->db->initDB();
-        $qry = "select * from cp_directory_agency where agency_id = :agency_id";
+        $qry = "select name as agency_name, org_phone as agency_telephone, org_fax as agency_fax, address as agency_address,
+        city as agency_city, state as agency_state, zipcode as agency_zipcode, description as description, type as user_type,
+        url as agency_url, status , cp_parent_child as agency_id, cp_parent_agency as parent_agency, cp_partner_type as partner_type, org_information.level_1
+         from org_information where cp_parent_child = :agency_id";
         $sth = $dbh->prepare($qry);
         $sth->execute(array(":agency_id" => $agency_id));
         return $sth->fetch(PDO::FETCH_ASSOC);
@@ -310,7 +313,7 @@ class agency
     {
         $dbh = $this->db->initDB();
 //        $qry = "select contact_id,contact_name,contact_telephone,contact_cellphone,contact_fax,contact_email,contact_type from cp_directory_contact where agency_id = :agency_id and user_status = 'ACTIVE' order by contact_name asc";
-        $qry = "select id
+        $qry = "select org_users.id
                 ,first_name
                 ,last_name
                 ,phone
@@ -318,18 +321,18 @@ class agency
                 ,extension
                 ,alt_phone
                 ,email
-                ,contact_type 
-                ,contact_license_type
-                ,status
+                ,oc.cp_contact_type as contact_type 
+                ,oc.contact_license_type
+                ,oc.status
                 from org_users 
-                join cp_directory_contact on cp_directory_contact.user_id = org_users.id
-                where cp_directory_contact.agency_id = :agency_id
+                join org_contacts oc on oc.user_id = org_users.id
+                where oc.cp_org_id = :agency_id
                ";
 
         if (UserAccess::ManageLevel1() || UserAccess::ManageMyOrg($agency_id)) {
             $qry .= '';
         } else {
-            $qry .= " and `status` = 'ACTIVE'";
+            $qry .= " and oc.status = 'ACTIVE'";
         }
 
         if (!empty($limit)) {
@@ -361,28 +364,42 @@ class agency
         return $sth->fetchColumn();
     }
 
-    public function edit_agency_contact($userId)
+    public function edit_agency_contact($userId, $agency_id = '')
     {
         $dbh = $this->db->initDB();
 //        $qry = "select * from cp_directory_contact where contact_id = :contact_id";
-        $qry = "select 
-                first_name,
-                last_name,
-                email,
-                title,
-                phone,
-                alt_phone,
-                status,
-                contact_type,
-                community_portal_user_type,
-                level_1,
-                contact_license_type,
-                extension
-                from org_users where id = :id";
+        if($agency_id){
+            $where = "  where oc.user_id = :id and
+             oc.cp_org_id = :agency_id ";
+        }else{
+            $where = " where oc.user_id = :id limit 1";
+        }
+        $qry = "select org_users.id
+            ,first_name
+            ,last_name
+            ,phone
+            ,title
+            ,extension
+            ,alt_phone
+            ,email
+            ,oc.cp_contact_type as contact_type 
+            ,oc.cp_level_1 as level_1
+            ,oc.cp_community_portal_user_type as community_portal_user_type
+            ,oc.contact_license_type
+            ,oc.status
+            from org_users 
+            join org_contacts oc on oc.user_id = org_users.id
+            $where ";
+
 
         $sth = $dbh->prepare($qry);
 //        $sth->execute(array(":contact_id" => $contact_id));
-        $sth->execute(array(":id" => $userId));
+        $data[":id"] = $userId;
+        if($agency_id){
+            $data[":agency_id"] = $agency_id;
+        }
+        
+        $sth->execute($data);
         return $sth->fetch(PDO::FETCH_ASSOC);
     }
 

@@ -51,9 +51,9 @@ class Action
 
         $level1 = implode(";", $_POST['level_1']);
         $partnerType = implode(";", $_POST['partner_type']);
-        $data_org = $this->setOrgData($_SESSION['agency_id']);
+        //$data_org = $this->setOrgData($_SESSION['agency_id']);
 
-        $data = [
+        /*$data = [
             "agency_name" => $_POST['agency_name'],
             "agency_address" => $_POST['agency_address'],
             "agency_city" => $_POST['agency_city'],
@@ -72,18 +72,45 @@ class Action
             "partner_type" => $partnerType
         ];
 
-        $r = $this->_db->insertUpdateSQL($data, 'cp_directory_agency');
+        $r = $this->_db->insertUpdateSQL($data, 'cp_directory_agency');*/
+        $parent_agency = $_SESSION['agency_id'];
+        $details = [
+            'org_admin_id' =>NULL,
+            'name' => $_POST['agency_name'],
+            'portal_type' => 'CP',
+            'org_phone' => $_POST['agency_telephone'],
+            'org_fax' => $_POST['agency_fax'],
+            'address'=>$_POST['agency_address'],
+            'city'=>$_POST['agency_city'],
+            'state'=>$_POST['agency_state'],
+            'zipcode'=>$_POST['agency_zipcode'],
+            'description'=>$_POST['description'],
+            'type'=>'',
+            'url'=>$_POST['agency_url'],
+            'status'=>'ACTIVE',
+            'created_date'=>$this->curTimeStamp,
+            'created_by'=>'SU_' . $_SESSION['user_id'],
+            //'cp_parent_child'=>$data[$i]->agency_id,
+            'cp_parent_agency'=>$parent_agency,
+            "level_1" => $level1,
+            'cp_partner_type'=>$partnerType,
+            'org_type'=> $parent_agency > 0 ? 'CP Child Org' : 'CP Parent Org',
+            'community_portal' => 0,
+            'case_management' => 0,
+        ];  
+
+        $r = $this->_db->insertUpdateSQL($details, 'org_information'); // org_information
 
         if (!$r) {
             echo $r;
             exit;
         } else {
-            $id = $this->_db->last_inserted_id; // agency_id
+            $id = $this->_db->last_inserted_id; // agency_id / org_id
             //ADD ORG DETAILS
-            $all_org_data = $data_org;
-            $all_org_data['related_to_agency'] = $id; // agency_id
+            $all_org_data['id'] = $id;
+            $all_org_data['cp_parent_child'] = $id; // agency_id
             $this->_db->insertUpdateSQL($all_org_data, 'org_information');
-            $org_id = $this->_db->last_inserted_id;
+            $org_id = $id;
             $this->_db->redir('directory/add_agencycontacts?id=' . $this->_db->encode($id) . '&oid=' . $this->_db->encode($org_id));
         }
     }
@@ -101,6 +128,7 @@ class Action
         $data = [
             'name' => $_POST['agency_name'],
             'type' => '',
+            'portal_type' => 'CP',
             'org_phone' => $_POST['agency_telephone'],
             'org_fax' => $_POST['agency_fax'],
             'url' => $_POST['agency_url'],
@@ -119,6 +147,7 @@ class Action
         ];
 
         return $data;
+
     }
 
     public function EditAgencyInfo()
@@ -129,28 +158,28 @@ class Action
         $level1 = implode(";", $_POST['level_1']);
         $partnerType = implode(";", $_POST['partner_type']);
 
-        $data = [
-            "agency_id" => $agency_id,
-            "agency_name" => $_POST['agency_name'],
-            "agency_address" => $_POST['agency_address'],
-            "agency_city" => $_POST['agency_city'],
-            "agency_state" => $_POST['agency_state'],
-            "agency_zipcode" => $_POST['agency_zipcode'],
-            "agency_telephone" => $_POST['agency_telephone'],
-            "agency_fax" => $_POST['agency_fax'],
-            "agency_url" => $_POST['agency_url'],
-            "description" => $_POST['description'],
-            "created_by" => $_SESSION['user_id'],
-            "created_date" => $this->currentDateTime,
-            "level_1" => $level1,
-            "partner_type" => $partnerType
-        ];
 
+        $org_id = $this->getOrgIdfromAgencyId($agency_id);
+        $data = [
+            'id' => $org_id,
+            'name' => $_POST['agency_name'],
+            'org_phone' => $_POST['agency_telephone'],
+            'org_fax' => $_POST['agency_fax'],
+            'address'=>$_POST['agency_address'],
+            'city'=>$_POST['agency_city'],
+            'state'=>$_POST['agency_state'],
+            'zipcode'=>$_POST['agency_zipcode'],
+            'description'=>$_POST['description'],
+            'url'=>$_POST['agency_url'],
+            'cp_partner_type' => $partnerType,
+            'level_1' => $level1
+        ]; 
+        
         if (UserAccess::ManageLevel1()) {
             $data = array_merge($data, ['status' => $_POST['status']]);
         }
 
-        $this->_db->insertUpdateSQL($data, 'cp_directory_agency');
+        $this->_db->insertUpdateSQL($data, 'org_information');
 
 
         //FILE UPLOAD
@@ -193,7 +222,16 @@ class Action
         $_core->redir("directory/agency_summary?id=" . $_core->encode($agency_id));
     }
 
-    /* add into cp_directory_agency, cp_directory_contacts 
+    /* get organization autoincrement id from agency id */
+    public function getOrgIdfromAgencyId($agencyId){
+        // check if invite already sent earlier
+        $qry = "select id from org_information where cp_parent_child = '$agencyId' ";
+        $sth = $this->_dbh->prepare($qry);
+        $sth->execute();
+        return $sth->fetchColumn();
+    }
+
+    /* update agency info into org_information, add into org_contacts 
        update org_information(org_type column)
     */
     public function sendInviteToExistingOrg(){
@@ -209,67 +247,70 @@ class Action
         $agencyId = $this->_db->decode($aidEnc);
 
         // check if invite already sent earlier
-        $qry = "select count(*) as CNT from cp_directory_contact where agency_id = '$agencyId' and user_id = '$userId' ";
+        $qry = "select count(*) as CNT from org_contacts where cp_org_id = '$agencyId' and user_id = '$userId' ";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
         $inviteAlreadySent = $sth->fetchColumn();
         
         
         // get user email
-        $qry = "select email,first_name,last_name from org_users where id = '$userId'";
+        $qry = "select email,first_name,last_name,community_portal_user_type,contact_type,level_1,
+        contact_license_type,cp_user_level
+         from org_users where id = '$userId'";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
         $fd = $sth->fetch(PDO::FETCH_OBJ);
         $email = $fd->email;
         $first_name = $fd->first_name;
         $last_name = $fd->last_name;
+        $community_portal_user_type = $fd->community_portal_user_type;
+        $contact_type = $fd->contact_type;
+        $level_1 = $fd->level_1;
+        $contact_license_type = $fd->contact_license_type;
+        $cp_user_level = $fd->cp_user_level;
 
         // get org data
         $qry = "select * from org_information where id = '$orgId'";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
         $f = $sth->fetch(PDO::FETCH_OBJ);
+        $community_portal = $f->community_portal;
+        $case_management = $f->case_management;
+
 
         if(!$agencyId){
-            // if agency id does not exist then add a new agency
-            $data = [
-                "agency_name" => $f->name,
-                "agency_address" => $f->address,
-                "agency_city" => $f->city,
-                "agency_state" => $f->state,
-                "agency_zipcode" => $f->zipcode,
-                "agency_telephone" => $f->org_phone,
-                "agency_fax" => $f->org_fax,
-                "agency_url" => $f->url,
-                "description" => $f->description,
-                "status" => "ACTIVE",
-                "created_by" => $_SESSION['user_id'],
-                "created_date" => $this->currentDateTime,
-                "agency_level" => "1",
-                "parent_agency" => $_SESSION['agency_id']
-            ];
+            // if agency id does not exist then add a new agency, assign autoincrement org id as new agency id
+            $agencyId = $orgId;
 
-            $r = $this->_db->insertUpdateSQL($data, 'cp_directory_agency');
-            $agencyId = $this->_db->last_inserted_id;
-
-            $agency_id = $_SESSION['agency_id'];
-            if($agency_id < 0){
+            $cp_parent_agency = $_SESSION['agency_id'];
+            if($cp_parent_agency < 0){
                 # Parent Agency
                 $org_type = 'CP Parent Org';
             }else{
                 # Child Agency
                 $org_type = 'CP Child Org';
             }
-            $this->_db->insertUpdateSQL(['id' => $orgId, 'org_type' => $org_type, 'related_to_agency' => $agencyId ], 'org_information');
+            $this->_db->insertUpdateSQL(['id' => $orgId, 'org_type' => $org_type, 'cp_parent_child' => $agencyId, 'cp_parent_agency' => $cp_parent_agency, 'related_to_agency' => $agencyId ], 'org_information');
         }
 
         if($inviteAlreadySent){
             $this->_db->redir('directory/add_agency?e=Invite Already Sent before');
         }
 
-        // save data in cp_directory_contact
-        $org_cp_directory_contact = ['agency_id'=> $agencyId, 'user_id' => $userId];
-        $this->_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+        // save data in org_contacts
+        $org_cp_directory_contact = [
+            'cp_org_id' => $agencyId,
+            'cp_user_level'=>$cp_user_level,
+            'cp_community_portal_user_type'=>$community_portal_user_type,
+            'cp_level_1'=>$level_1,
+            'contact_license_type'=>$contact_license_type,
+            'cp_contact_type'=>$contact_type, 
+            'cp_access' => $community_portal,
+            'cms_access' => $case_management,
+            'user_id' => $userId
+        ];
+
+        $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
 
         //NOTIFICATION
         $_agency = new agency();
@@ -297,7 +338,7 @@ class Action
     }
 
 
-    /* add into cp_directory_contacts , org_contacts
+    /* add into org_contacts
        update org_information(org_type column)
     */
     public function sendInviteToExistingContact(){
@@ -312,7 +353,7 @@ class Action
         $orgIdEnc = $this->_db->gpGet('oid');
 
         // get user email
-        $qry = "select id,email,first_name,last_name,user_level,status from org_users where id = '$userId'";
+        $qry = "select * from org_users where id = '$userId'";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
         $fd = $sth->fetch(PDO::FETCH_OBJ);
@@ -323,6 +364,11 @@ class Action
         $last_name = $fd->last_name;
         $user_status = $fd->status;
         $user_level = $fd->user_level;
+        $cp_user_level = $fd->cp_user_level;
+        $community_portal_user_type = $fd->community_portal_user_type;
+        $level_1 = $fd->level_1;
+        $licenseType = $fd->contact_license_type;
+        $contactType = $fd->contact_type;
 
         if($orgIdEnc){
             // update org_user ID in org_information table
@@ -344,14 +390,21 @@ class Action
             }
             
             // save data in org_contacts table
-            $org_contacts_data = ['org_id'=> $org_id, 'user_id'=> $org_admin_user_id, 'status'=> $user_status, 'user_level'=> $user_level];
+            $org_contacts_data = [
+                'cp_org_id'=> $agencyId,
+                'user_id'=> $org_admin_user_id, 
+                'status'=> $user_status, 
+                'cms_access_level'=> $user_level,
+                'cp_user_level'=>$cp_user_level,
+                'cp_community_portal_user_type'=>$community_portal_user_type,
+                'cp_level_1'=>$level_1,
+                'contact_license_type'=>$licenseType,
+                'cp_contact_type'=>$contactType,
+            ];
             $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');    
         
         }
 
-        // save data in cp_directory_contact
-        $org_cp_directory_contact = ['agency_id'=> $agencyId, 'user_id' => $userId];
-        $this->_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
 
         //NOTIFICATION
         $_agency = new agency();
@@ -378,6 +431,8 @@ class Action
         $this->_db->redir('directory/agency_summary?id='.$aidEnc.'&m=Invite Sent to the selected Contact');
     }
 
+    # insert into org_users , update org_information
+    # insert into org_contacts
     public function AddAgencyContact()
     {
 
@@ -430,12 +485,7 @@ class Action
             "community_portal" => 0,
             "case_management" => 0,
             "agency_id" => $agencyId,
-            "community_portal_user_type" => $community_portal_user_type,
-            "contact_type" => $contactType,
-            "level_1" => $level_1,
-            "cp_user_level" => $cp_user_level,
-            "user_level" => $user_level,
-            'contact_license_type' => $licenseType
+            "user_level" => $user_level
         ];
 
 //        $this->debugData($data);
@@ -452,6 +502,7 @@ class Action
         }
 
         if (!empty($agencyId)) {
+            // if agency id exist then insert
             $r = $this->_db->insertUpdateSQL($data, 'org_users');
 
             if ($r) {
@@ -474,14 +525,20 @@ class Action
                             $this->_db->insertUpdateSQL(['id' => $org_id, 'org_admin_id' => $org_admin_user_id], 'org_information');
                         }
                     }
-                    
-                    // save data in org_contacts table
-                    $org_contacts_data = ['org_id'=> $org_id, 'user_id'=> $org_admin_user_id, 'status'=> $user_status, 'user_level'=> $user_level];
-                    $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');
 
-                    // save data in cp_directory_contact
-                    $org_cp_directory_contact = ['agency_id'=> $agencyId, 'user_id' => $org_admin_user_id];
-                    $this->_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+                    // save data in org_contacts table
+                    $org_contacts_data = [
+                        'cp_org_id'=> $agencyId,
+                        'user_id'=> $org_admin_user_id, 
+                        'status'=> $user_status, 
+                        'cms_access_level'=> $user_level,
+                        'cp_user_level'=>$cp_user_level,
+                        'cp_community_portal_user_type'=>$community_portal_user_type,
+                        'cp_level_1'=>$level_1,
+                        'contact_license_type'=>$licenseType,
+                        'cp_contact_type'=>$contactType,
+                    ];
+                    $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');
                 
                 
                 }
@@ -525,7 +582,7 @@ class Action
 
     }
 
-
+    // update org_information , update org_contacts
     public function EditAgencyContact()
     {
         global $_core , $_db;
@@ -563,29 +620,32 @@ class Action
             'alt_phone' => $_POST['alt_phone'],
             'status' => $user_status,
             'updated_date' => $this->currentDateTime,
-            'updated_by' => $_SESSION['user_id'],
-            'community_portal_user_type' => $community_portal_user_type,
-            'contact_type' => $contactType,
-            'level_1' => $level_1,
-            'contact_license_type' => $licenseType
+            'updated_by' => $_SESSION['user_id']
         ];
 
         $this->_db->insertUpdateSQL($data, 'org_users');
 
         // get org_id
-        $qry = "select parent_org_id from cp_directory_agency where agency_id = '$agency_id'";
+        $qry = "select id from org_information where cp_parent_child = '$agency_id'";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
         $f = $sth->fetch(PDO::FETCH_OBJ);
-        $parent_org_id = $f->parent_org_id;
+        $parent_org_id = $f->id;
 
         if($user_level == 'ADMIN'){
             $this->_db->insertUpdateSQL(['id' => $parent_org_id, 'org_admin_id' => $contact_id], 'org_information');
         }
         
         // update data in org_contacts table
-       
-        $qry = "update org_contacts set status = '$user_status', user_level = '$user_level' where org_id = '$parent_org_id' AND user_id = '$contact_id' ";
+
+        $qry = "update org_contacts 
+        set status = '$user_status', 
+        cms_access_level = '$user_level',
+        cp_community_portal_user_type = '$community_portal_user_type',
+        cp_level_1 = '$level_1',
+        contact_license_type = '$licenseType',
+        cp_contact_type = '$contactType'
+        where cp_org_id = '$agency_id' AND user_id = '$contact_id' ";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
 
@@ -693,12 +753,7 @@ class Action
             "created_date" => $this->currentDateTime,
             "created_by" => $_SESSION['user_id'],
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
-            "community_portal" => 1,
-            "case_management" => 0,
-            "agency_id" => $agencyId,
-            "community_portal_user_type" => 'ADMIN',
-            "level_1" => $level_1,
-            "cp_user_level" => '1',
+            "agency_id" => $agencyId
         ];
 
 //        $this->debugData($data);
@@ -711,8 +766,17 @@ class Action
 
                 $user_id = $this->_db->last_inserted_id;
                 // save data in cp_directory_contact
-                $org_cp_directory_contact = ['agency_id'=> $agencyId, 'user_id' => $user_id];
-                $this->_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+                $org_cp_directory_contact = [
+                    'cp_org_id'=> $agencyId,
+                    'user_id'=> $user_id, 
+                    'status'=> 'ACTIVE', 
+                    'cp_user_level'=>'1',
+                    'cp_community_portal_user_type'=>'ADMIN',
+                    'cp_level_1'=>$level_1,
+                    'cp_access'=>1,
+                    'cms_access'=>0,
+                ];
+                $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
 
 
                 //NOTIFICATION
@@ -760,6 +824,9 @@ class Action
         $userIdEnc = $this->_db->gpGet('uid');
         $userId = $this->_db->decode($userIdEnc);
 
+        $agencyEnc = $this->_db->gpGet('aid');
+        $agencyId = $this->_db->decode($agencyEnc);
+
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
         $data = [
@@ -778,7 +845,13 @@ class Action
 
         $this->_db->insertUpdateSQL($data, 'org_users');
 
-        $link = "directory/edit_level1_user?uid={$userIdEnc}&e=complete";
+        $qry = "update org_contacts 
+        SET cp_level_1 = '$level_1'
+        where cp_org_id = '$agencyId' AND user_id = '$userId' ";
+        $sth = $this->_dbh->prepare($qry);
+        $sth->execute();
+
+        $link = "directory/edit_level1_user?uid={$userIdEnc}&aid={$agencyEnc}&e=complete";
         $this->_db->redir($link);
     }
 
@@ -808,10 +881,7 @@ class Action
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
             "community_portal" => 1,
             "case_management" => 0,
-            "agency_id" => $agencyId,
-            "community_portal_user_type" => 'ADMIN',
-            "level_1" => $level_1,
-            "cp_user_level" => '2',
+            "agency_id" => $agencyId
         ];
 
 //        $this->debugData($data);
@@ -824,8 +894,17 @@ class Action
 
                 $user_id = $this->_db->last_inserted_id;
                 // save data in cp_directory_contact
-                $org_cp_directory_contact = ['agency_id'=> $agencyId, 'user_id' => $user_id];
-                $this->_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+                $org_cp_directory_contact = [
+                    'cp_org_id'=> $agencyId,
+                    'user_id'=> $user_id, 
+                    'status'=> 'ACTIVE', 
+                    'cp_user_level'=>'2',
+                    'cp_community_portal_user_type'=>'ADMIN',
+                    'cp_level_1'=>$level_1,
+                    'cp_access'=>1,
+                    'cms_access'=>0,
+                ];
+                $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
                 
                 //NOTIFICATION
                 $_agency = new agency();
@@ -872,6 +951,9 @@ class Action
         $userIdEnc = $this->_db->gpGet('uid');
         $userId = $this->_db->decode($userIdEnc);
 
+        $agencyEnc = $this->_db->gpGet('aid');
+        $agencyId = $this->_db->decode($agencyEnc);
+
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
         $data = [
@@ -890,7 +972,16 @@ class Action
 
         $this->_db->insertUpdateSQL($data, 'org_users');
 
-        $link = "directory/edit_level1_user?uid={$userIdEnc}&e=complete";
+        // update org_contacts
+        $qry = "update org_contacts 
+        set
+        cp_level_1 = '$level_1'
+        where cp_org_id = '$agencyId' AND user_id = '$userId' ";
+
+        $sth = $this->_dbh->prepare($qry);
+        $sth->execute();
+
+        $link = "directory/edit_level1_user?uid={$userIdEnc}&aid={$agencyEnc}&e=complete";
         $this->_db->redir($link);
     }
 

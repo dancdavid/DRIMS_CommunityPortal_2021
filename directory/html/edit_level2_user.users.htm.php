@@ -43,6 +43,7 @@ $f = $_user->getUserData($_core->decode($_core->gpGet('uid')));
                         <form class="form-horizontal" enctype="multipart/form-data" id="editLevel2User" role="form" method="post"
                               action="../_lib/agencyaction.php?action=<?= $_core->encode('EditLevel2User'); ?>">
                             <input type="hidden" name="uid" value="<?= $_core->gpGet('uid') ?>">
+                            <input type="hidden" name="aid" value="<?= $_core->gpGet('aid') ?>">
                             <tr>
                                 <td>
                                     <div class="form-group">

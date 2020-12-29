@@ -111,8 +111,9 @@ class Action
     }
 
     public function OrgMainReport()
-    {
-        $qry = "select * from cp_directory_agency where parent_agency = :parent and `status` = 'ACTIVE'";
+    {   
+        $fields = $this->_db->getAgencyFields();
+        $qry = "select $fields from org_information where cp_parent_agency = :parent and `status` = 'ACTIVE'";
         $dbh = $this->_db->initDB();
         $sth = $dbh->prepare($qry);
         $sth->execute([':parent' => $_SESSION['parent_agency']]);

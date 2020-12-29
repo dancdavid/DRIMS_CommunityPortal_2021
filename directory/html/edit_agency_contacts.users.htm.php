@@ -7,7 +7,8 @@ $_level = new Level1();
 $agency_id = $_core->decode($_core->gpGet('id'));
 $_agency = new agency($agency_id);
 $contact_id = $_core->decode($_core->gpGet('uid'));
-$f = $_agency->edit_agency_contact($contact_id);
+$f = $_agency->edit_agency_contact($contact_id, $agency_id);
+
 ?>
 <div class="col-sm-12 col-xs-12">
     <div class="panel panel-danger">

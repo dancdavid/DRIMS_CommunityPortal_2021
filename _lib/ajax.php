@@ -75,7 +75,12 @@ class Action
         $committee_id = $this->_core->decode($this->_core->gpGet('cid'));
 
         $dbh = $this->_db->initDB();
-        $qry = "select * from cp_directory_contact where user_status = 'ACTIVE'";
+        $qry = " select org_users.id as contact_id,
+        oc.cp_org_id as agency_id,
+        CONCAT(first_name,last_name) as contact_name
+        from org_users 
+        join org_contacts oc on oc.user_id = org_users.id
+        where oc.status = 'ACTIVE' and oc.cp_org_id is not null ";
         $sth = $dbh->query($qry);
 
 //        $_agncy = new agency();
@@ -98,7 +103,24 @@ class Action
         $_core = new core();
         $agency_name = $_POST['agency_name'];
         $dbh = $this->_db->initDB();
-        $sth = $dbh->query("select org_contacts.cp_org_id,org_contacts.user_id,org_information.name as org_name , (select agency_name from cp_directory_agency where agency_name = org_information.name limit 1) as agency_name , (select agency_id from cp_directory_agency where agency_name = org_information.name limit 1) as agency_id, org_users.first_name as user_fname, org_users.last_name as user_lname, org_users.email as user_mail from org_contacts join org_information on org_contacts.cp_org_id = org_information.id join org_users on org_contacts.user_id = org_users.id where org_information.name like '%$agency_name%' and org_contacts.cp_user_level = 'ADMIN'");
+        $sth = $dbh->query("select org_information.id as organization_id , org_contacts.cms_org_id as org_id,org_contacts.user_id,org_information.name , 
+         org_information.cp_parent_child as agency_id, 
+         org_users.first_name as user_fname, org_users.last_name as user_lname, org_users.email as user_mail 
+         from org_contacts 
+         join org_information on org_contacts.cms_org_id = org_information.id 
+         join org_users on org_contacts.user_id = org_users.id 
+         where org_information.name like '%$agency_name%' and org_contacts.cms_access_level = 'ADMIN'
+         
+         UNION
+
+         select org_information.id as organization_id , org_contacts.cp_org_id as org_id,org_contacts.user_id,org_information.name
+          , org_information.cp_parent_child as agency_id, 
+         org_users.first_name as user_fname, org_users.last_name as user_lname, org_users.email as user_mail 
+         from org_contacts 
+         join org_information on org_contacts.cp_org_id = org_information.cp_parent_child
+         join org_users on org_contacts.user_id = org_users.id 
+         where org_information.name like '%$agency_name%'
+         ");
         $dataExist = false;
 
         $body = '<table class="table table-hover table-bordered table-sm">';
@@ -109,16 +131,16 @@ class Action
                      <th>Action</th>
                   </tr></thead><tbody>';
         while ($f = $sth->fetch(PDO::FETCH_OBJ)) {
-            $agency_name = $f->agency_name;
-            $agency_id = ($agency_name ? $f->agency_id : 0);
+
+            $agency_id = ($f->agency_id ? $f->agency_id : 0);
             $encoded_agency_id = $_core->encode($agency_id);
             
             //if(!$agency_name){
                 $dataExist = true;
-                $org_name = $f->org_name;
+                $org_name = $f->name;
                 $user_name = $f->user_fname .' '. $f->user_lname;
                 $user_mail = $f->user_mail;
-                $oid = $_core->encode($f->org_id);
+                $oid = $_core->encode($f->organization_id);
                 $uid = $_core->encode($f->user_id);
                 $body .= "<tr class=''> 
                           <td> $org_name </td>
@@ -298,9 +320,9 @@ class Action
 
     public function getAgency()
     {
-
+        $fields = $this->_db->getAgencyFields();
         $dbh = $this->_db->initDB();
-        $qry = "select * from cp_directory_agency where";
+        $qry = "select $fields from org_information where";
 
 //        $qry .= " agency_id <> '{$_SESSION['parent_agency']}' or";
 
@@ -323,7 +345,7 @@ class Action
         }
 
 
-        $qry .= " parent_agency = '{$_SESSION['parent_agency']}'";
+        $qry .= " cp_parent_agency = '{$_SESSION['parent_agency']}'";
 
 
         $sth = $dbh->query($qry);
@@ -368,9 +390,9 @@ class Action
 
     public function getPublicAgency()
     {
-
+        $fields = $this->_db->getAgencyFields();
         $dbh = $this->_db->initDB();
-        $sth = $dbh->query("select * from cp_directory_agency where status = 'ACTIVE'");
+        $sth = $dbh->query("select $fields from org_information where status = 'ACTIVE'");
 
         $data = array();
         while ($f = $sth->fetch(PDO::FETCH_OBJ)) {
@@ -399,7 +421,8 @@ class Action
     {
 
         $dbh = $this->_db->initDB();
-        $sth = $dbh->query("select * from cp_directory_agency");
+        $fields = $this->_db->getAgencyFields();
+        $sth = $dbh->query("select $fields from org_information");
 
         $data = array();
         while ($f = $sth->fetch(PDO::FETCH_OBJ)) {
@@ -487,15 +510,18 @@ class Action
 
     public function getLevel1Users()
     {
-        $qry = "select id, 
-        first_name, 
-        last_name, 
-        email, 
-        phone, 
-        status, 
-        level_1
-        from org_users where agency_id = :agencyId
-        and cp_user_level = '1'";
+
+        $qry = "select org_users.id
+            ,first_name
+            ,last_name
+            ,phone
+            ,email
+            ,oc.cp_level_1 as level_1
+            ,oc.status
+            from org_users 
+            join org_contacts oc on oc.user_id = org_users.id
+            where
+             oc.cp_org_id = :agencyId and oc.cp_user_level = '1' ";
 
         $dbh = $this->_db->initDB();
         $sth = $dbh->prepare($qry);
@@ -507,7 +533,7 @@ class Action
             $name = $f->first_name . ' ' . $f->last_name;
             $level1 = $_level->GetLevel1Name($f->level_1);
             $data['aaData'][] = [
-                "<a href='edit_level1_user?uid={$this->_core->encode($f->id)}'>{$name}</a>",
+                "<a href='edit_level1_user?uid={$this->_core->encode($f->id)}&aid={$this->_core->encode($_SESSION['agency_id'])}'>{$name}</a>",
                 $f->email,
                 $f->phone,
                 str_replace(",", "<br>", $level1),
@@ -521,15 +547,17 @@ class Action
 
     public function getLevel2Users()
     {
-        $qry = "select id, 
-        first_name, 
-        last_name, 
-        email, 
-        phone, 
-        status, 
-        level_1
-        from org_users where agency_id = :agencyId
-        and cp_user_level = '2'";
+        $qry = "select org_users.id
+            ,first_name
+            ,last_name
+            ,phone
+            ,email
+            ,oc.cp_level_1 as level_1
+            ,oc.status
+            from org_users 
+            join org_contacts oc on oc.user_id = org_users.id
+            where
+             oc.cp_org_id = :agencyId and oc.cp_user_level = '2' ";
 
         $dbh = $this->_db->initDB();
         $sth = $dbh->prepare($qry);
@@ -541,7 +569,7 @@ class Action
             $name = $f->first_name . ' ' . $f->last_name;
             $level1 = $_level->GetLevel1Name($f->level_1);
             $data['aaData'][] = [
-                "<a href='edit_level2_user?uid={$this->_core->encode($f->id)}'>{$name}</a>",
+                "<a href='edit_level2_user?uid={$this->_core->encode($f->id)}&aid={$this->_core->encode($_SESSION['agency_id'])}'>{$name}</a>",
                 $f->email,
                 $f->phone,
                 str_replace(",", "<br>", $level1),

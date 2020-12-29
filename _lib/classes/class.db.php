@@ -168,7 +168,7 @@ class db extends core
             $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             //TODO SET QRY TO VALIDATE LOGIN
             // $qry = "SELECT * FROM {$table} WHERE email = :email and password = :password";
-            $qry = "SELECT u.*, c.cp_org_id, c.cp_user_level, c.cp_instance_id, c.cp_community_portal_user_type, c.cp_contact_type, c.cp_level_1, c.contact_license_type, c.cp_notification, c.default_org_id, c.default_portal_type, c.homescreen_org_id  FROM org_contacts as c LEFT JOIN {$table} as u ON u.agency_id =  c.cp_org_id  WHERE email = :email and password = :password";
+            $qry = "SELECT u.*, c.cp_org_id, c.cp_user_level, c.cp_access_level, c.cp_instance_id, c.cp_community_portal_user_type, c.cp_contact_type, c.cp_level_1, c.contact_license_type, c.cp_notification, c.default_org_id, c.default_portal_type, c.homescreen_org_id  FROM {$table} as u LEFT JOIN org_contacts as c ON u.id =  c.user_id  WHERE email = :email and password = :password limit 1";
             $sth = $dbh->prepare($qry);
             $sth->bindParam(":email", $email);
             $sth->bindParam(":password", $password);
@@ -193,11 +193,12 @@ class db extends core
                         # If the user do not have access to CP 
                         $e = 'accessdenied';
                         $link = "$landingPage/?e=$e";
-                    }else if(!$this->checkInstanceURL($f->id)){
+                    }
+                    /*else if(!$this->checkInstanceURL($f->id)){
                         # If the login url is incorrect
                         $e = 'incorrecturl';
                         $link = "$landingPage/?e=$e";
-                    }
+                    }*/
                     else{
                         # Save data for autologin
                         if($f->case_management){
@@ -208,7 +209,7 @@ class db extends core
 
                         $_SESSION['v'] = CRYPT_KEY . session_id() . C_24_KEY;
                         $_SESSION['userID'] = $f->id;
-                        $_SESSION['userLevel'] = $f->user_level;
+                        $_SESSION['userLevel'] = $f->cp_access_level;
                         $_SESSION['orgID'] = $f->default_org_id;
                         $_SESSION['cp_access'] = $f->community_portal;
                         $_SESSION['cms_access'] = $f->case_management;
@@ -279,6 +280,14 @@ class db extends core
         return $count;
     }
 
+    public function getAgencyAdminUser($agencyId){
+        $qry = "SELECT cpdc.user_id FROM org_users as u LEFT JOIN org_contacts as cpdc ON cpdc.user_id = u.id WHERE cpdc.cp_community_portal_user_type='ADMIN' AND cpdc.cp_org_id = $agencyId LIMIT 1";
+        $dbh = $this->initDB();
+        $sth = $dbh->prepare($qry);
+        $sth->execute();
+        
+        return $sth->fetchColumn();
+    }
 
     private function getFirstURLSegment(){
         $uri_path = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);
@@ -359,12 +368,30 @@ class db extends core
             return false;
     }
 
+    // get agency fields from org information table
+    public function getAgencyFields(){
+
+        $ageny_table_fields = " id , name as agency_name, org_phone as agency_telephone, org_fax as agency_fax, address as agency_address,
+        city as agency_city, state as agency_state, zipcode as agency_zipcode, description as description, type as user_type,
+        url as agency_url, status , cp_parent_child as agency_id, cp_parent_agency as parent_agency, cp_partner_type as partner_type, level_1 ";
+        
+        return $ageny_table_fields;
+    }
+
     public function checkExistingUser($email, $agency_id,  $table)
     {
 
         //UPDATED FOR CP
         $dbh = $this->initDB();
-        $qry = "select count(email) as CNT from org_users join cp_directory_contact on cp_directory_contact.user_id = org_users.id where email = '$email' and cp_directory_contact.agency_id = $agency_id ";
+        if($agency_id){
+            $qry = "select count(email) as CNT from org_users 
+            join org_contacts on org_contacts.user_id = org_users.id 
+            where email = '$email' and org_contacts.cp_org_id = $agency_id ";
+        }else{
+            $qry = "select count(email) as CNT from org_users 
+            where email = '$email'  ";
+        }
+        
 
         $r = $dbh->query($qry)->fetchColumn();
 

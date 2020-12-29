@@ -86,13 +86,13 @@ class Action {
         
         $email = $_core->gpGet('email');
         
-        if ($_db->checkEmailExists($email, 'cp_directory_contact')) {
+        if ($_db->checkEmailExists($email, 'org_users')) {
             
             $salt = $_core->generateSalt();
             $pwd = crypt('r31coV3rY' ,$salt );
             
             $dbh = $_db->initDB();
-            $qry = "update cp_directory_contact set password = '$pwd', salt = '$salt' where contact_email = '$email'";
+            $qry = "update org_users set password = '$pwd', salt = '$salt' where email = '$email'";
             $sth = $dbh->query($qry);
 
             $_notification = new notification();
@@ -439,10 +439,12 @@ class Action {
         
         //NOTIFY AGENCIES
         $dbh = $_db->initDB();
-        $qry = "select contact_email from cp_directory_contact 
-            where (contact_type like ('%VOLUNTEER COORDINATOR%') 
-            or contact_type like ('%PRIMARY CONTACT%')) 
-            and user_status = 'ACTIVE'";
+        $qry = "select org_users.email as contact_email
+        from org_users 
+        join org_contacts oc on oc.user_id = org_users.id
+        where (oc.cp_contact_type like ('%VOLUNTEER COORDINATOR%') 
+        or oc.cp_contact_type like ('%PRIMARY CONTACT%')) 
+        and oc.status = 'ACTIVE' ";
         $sth = $dbh->query($qry); 
 
         $emails = array();
@@ -687,7 +689,6 @@ class Action {
 //        );
 
         $data = array(
-            "agency_id" => $agency_id,
             'first_name' => filter_input(INPUT_POST, 'first_name', FILTER_SANITIZE_STRING),
             'last_name' => filter_input(INPUT_POST, 'last_name', FILTER_SANITIZE_STRING),
             'email' => filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL),
@@ -695,15 +696,12 @@ class Action {
             'alt_phone' => $_POST['alt_phone'],
             'community_portal' => 1,
             'case_management' => 0,
-            'community_portal_user_type' => 'ADMIN',
             "status" => "ACTIVE",
             "password" => $password,
             "salt" => $salt,
-            "contact_type" => $contact_type,
             'created_date' => $this->currentDateTime,
             'created_by' => 'AG_' . $_SESSION['userID'],
             'ip_addr' => $_SERVER['REMOTE_ADDR'],
-            'level_1' => $_core->decode($_core->gpGet('lvl')),
             'agency_level' => '1'
         );
 
@@ -718,8 +716,18 @@ class Action {
 
             $user_id = $_db->last_inserted_id;
             // save data in cp_directory_contact
-            $org_cp_directory_contact = ['agency_id'=> $agency_id, 'user_id' => $user_id];
-            $_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+            $org_cp_directory_contact = [
+                'cp_org_id'=> $agency_id,
+                'user_id'=> $user_id, 
+                'status'=> "ACTIVE", 
+                'cp_community_portal_user_type'=>'ADMIN',
+                'cp_level_1'=>$_core->decode($_core->gpGet('lvl')),
+                'contact_license_type'=>$licenseType,
+                'cp_contact_type'=>$contact_type,
+                'cp_access' => 1,
+                'cms_access' => 0,
+            ];
+            $_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
 
         } else {
             die('OOPS: Error 0001. Contact System Administrator');
@@ -761,18 +769,13 @@ class Action {
         $password = crypt($temp_password, $salt);
 
         $data = array(
-            "agency_id" => $agency_id,
             'first_name' => filter_input(INPUT_POST, 'first_name', FILTER_SANITIZE_STRING),
             'last_name' => filter_input(INPUT_POST, 'last_name', FILTER_SANITIZE_STRING),
             'email' => filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL),
             'phone' => $_POST['phone'],
             'alt_phone' => $_POST['alt_phone'],
-            'community_portal' => 1,
-            'community_portal_user_type' => 'ADMIN',
-            "status" => "ACTIVE",
             "password" => $password,
             "salt" => $salt,
-            "contact_type" => $contact_type,
             'created_date' => $this->currentDateTime,
             'created_by' => 'AG_' . $_SESSION['userID'],
             'ip_addr' => $_SERVER['REMOTE_ADDR'],
@@ -784,8 +787,16 @@ class Action {
 
             $user_id = $_db->last_inserted_id;
             // save data in cp_directory_contact
-            $org_cp_directory_contact = ['agency_id'=> $agency_id, 'user_id' => $user_id];
-            $_db->insertUpdateSQL($org_cp_directory_contact, 'cp_directory_contact');
+            $org_cp_directory_contact = [
+                'cp_org_id' => $agency_id,
+                'user_id' => $user_id, 
+                'status' => "ACTIVE", 
+                'cp_user_level' => 0,
+                'cp_community_portal_user_type' => 'ADMIN',
+                'cp_contact_type' => $contact_type,
+                'cp_access' => 1
+            ];
+            $_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
             
         } else {
             die('OOPS: Error 0002. Contact System Administrator');
@@ -1050,12 +1061,12 @@ class Action {
         $password = $_core->gpGet('password');
 
         $data = array(
-            'contact_id' => $_SESSION['user_id'],
+            'id' => $_SESSION['user_id'],
             'password' => crypt($password, $salt),
             'salt' => $salt
         );
 
-        $_db->insertUpdateSQL($data, 'cp_directory_contact');
+        $_db->insertUpdateSQL($data, 'org_users');
 
         $error = urlencode('Password Updated');
         $_core->redir('directory/index&e=' . $error);

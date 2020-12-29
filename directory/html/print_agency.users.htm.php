@@ -5,8 +5,9 @@ $dbh = $_db->initDB();
 
 $agency_id = '';
 if (!empty($_GET['id'])) {
+    $fields = $_db->getAgencyFields();
     $agencyId = $_core->decode($_core->gpGet('id'));
-    $qry = "select * from cp_directory_agency where agency_id = '$agencyId'";
+    $qry = "select $fields from org_information where cp_parent_child = '$agencyId'";
 } else {
     $qry = "select * from cp_search_orgs_and_locations where status = 'ACTIVE'
     and parent_agency = '{$_SESSION['parent_agency']}'
