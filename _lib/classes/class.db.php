@@ -167,26 +167,64 @@ class db extends core
             $dbh = $this->initDB();
             $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             //TODO SET QRY TO VALIDATE LOGIN
-            // $qry = "SELECT * FROM {$table} WHERE email = :email and password = :password";
-            $qry = "SELECT u.*, c.cp_org_id, c.cp_user_level, c.cp_access_level, c.cp_instance_id, c.cp_community_portal_user_type, c.cp_contact_type, c.cp_level_1, c.contact_license_type, c.cp_notification, c.default_org_id, c.default_portal_type, c.homescreen_org_id  FROM {$table} as u LEFT JOIN org_contacts as c ON u.id =  c.user_id  WHERE email = :email and password = :password limit 1";
+            $qry = "SELECT * FROM {$table} WHERE email = :email and password = :password";
             $sth = $dbh->prepare($qry);
             $sth->bindParam(":email", $email);
             $sth->bindParam(":password", $password);
             $sth->execute();
-            $f = $sth->fetch(PDO::FETCH_OBJ);
+            $r = $sth->fetch(PDO::FETCH_OBJ);
             if ($sth->rowCount() <= 0) {
                 $e = urlencode("Invalid Username or Password!");
                 $link = "$landingPage/?e=$e";
             } else {
-                if ($f->status !== 'ACTIVE')
+                    # get user and its related agency data
+                    $qry = "SELECT u.id,u.first_name,u.last_name,u.email,u.default_org_id,u.default_portal_type, u.homescreen_org_id , u.default_agency_id , c.cp_org_id, c.cp_user_level, c.cp_access_level, c.cp_instance_id, c.cp_community_portal_user_type,
+                    c.cp_contact_type, c.cp_level_1, c.contact_license_type, c.cp_notification , c.status, c.cp_org_id , c.cp_access as community_portal, c.cms_access as case_management
+                    FROM {$table} as u 
+                    LEFT JOIN org_contacts as c ON u.id =  c.user_id  
+                    WHERE u.id = {$r->id} ";
+                    $sth = $dbh->prepare($qry);
+                    $sth->execute();
+                    $rows = $sth->rowCount();
+                    $f = new stdClass;
+                    while($t = $sth->fetch(PDO::FETCH_OBJ)){
+                        # default_agency_id = cp_org_id and cp_org_id IS NOT NULL
+                        if($t->default_agency_id == $t->cp_org_id && $t->cp_org_id){
+                            # get the agency data which is set as default
+                            $f = $t;
+                        }
+                    }
+            
+                if($rows && empty((array)$f)){
+                        # if data exist in org_contacts table and default agency is not set then redirect to editprofile section 
+                        # to set a default agency first
+                        $link = 'directory/editmyprofile?err=Please set a default agency first to continue';
+                        $_SESSION['v'] = CRYPT_KEY . session_id() . C_24_KEY;
+                        $_SESSION['userID'] = $r->id;
+                        $_SESSION['orgID'] = $r->default_org_id;
+                        $_SESSION['user_id'] = $r->id;
+                        $_SESSION['agency_id'] = $r->default_agency_id;
+                        $_SESSION['user_name'] = $r->first_name . ' ' . $r->last_name;
+                        $_SESSION['user_email'] = $r->email;
+                        $_SESSION['landing_page'] = $landingPage;
+                        $_SESSION['userLevel'] = '';
+                        $_SESSION['cp_access'] = '';
+                        $_SESSION['cms_access'] = '';
+                        $_SESSION['user_type'] = '';
+                        $_SESSION['level_1'] = '';
+                        $_SESSION['cp_user_level'] = 0;
+                        //$_SESSION['parent_agency'] = '';
+                        
+                }
+                else if ($f->status !== 'ACTIVE')
                 {
                     $e = 'contactsupport';
                     $link = "$landingPage/?e=$e";
                 }
                 else {
-                    
+                 
                     $isCommunityPortal = $f->community_portal;
-                    $agencyId = $f->agency_id;
+                    $agencyId = $f->default_agency_id;
                     $agency = new agency();
                   
                     if(!$isCommunityPortal){
@@ -214,15 +252,20 @@ class db extends core
                         $_SESSION['cp_access'] = $f->community_portal;
                         $_SESSION['cms_access'] = $f->case_management;
                         $_SESSION['user_id'] = $f->id;
-                        $_SESSION['agency_id'] = $f->agency_id;
+                        $_SESSION['agency_id'] = $f->default_agency_id;
                         $_SESSION['user_type'] = $f->cp_community_portal_user_type;
                         $_SESSION['user_name'] = $f->first_name . ' ' . $f->last_name;
                         $_SESSION['user_email'] = $f->email;
                         $_SESSION['level_1'] = $f->cp_level_1;
                         $_SESSION['cp_user_level'] = $f->cp_user_level;
                         $_SESSION['landing_page'] = $landingPage;
-
-                        $link = 'directory';
+                        //$_SESSION['parent_agency'] = '';
+                        if(!$r->default_agency_id){
+                            // if default agency id is not defined then set it first , redirect to editprofile page
+                            $link = 'directory/editmyprofile';
+                        }else{
+                            $link = 'directory';
+                        }
                     }
                     
                 }

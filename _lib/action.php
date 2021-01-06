@@ -1106,16 +1106,19 @@ class Action {
         global $_db;
 
         $level1 = implode(";",$_POST['level_1']);
+        $user_id = $_SESSION['user_id'];
+        $default_agency_id = $_POST['default_agency_id'];
         $data = [
-            'id' => $_SESSION['user_id'],
+            'id' => $user_id,
+            'default_agency_id' => $default_agency_id,
             'first_name' => $_POST['first_name'],
             'last_name' => $_POST['last_name'],
             'phone' => $_POST['phone'],
             'alt_phone' => $_POST['alt_phone'],
-            'level_1' => $level1,
-            'updated_by' => $_SESSION['user_id'],
+            //'level_1' => $level1,
+            'updated_by' => $user_id,
             'updated_date' => $this->currentDateTime,
-            'cp_notification' => $_POST['cp_notification']
+            //'cp_notification' => $_POST['cp_notification']
         ];
 
 //        $this->debugData($data);
@@ -1123,6 +1126,36 @@ class Action {
         $_db->insertUpdateSQL($data, 'org_users');
 
         $_SESSION['level_1_filter'] = $level1;
+
+        if($default_agency_id){
+            // if default agency id exist then update lvel_1 and notification data in contacts table and update SESSION values
+            $dbh = $_db->initDB();
+            $qry = "SELECT c.id , c.cp_user_level, c.cp_access_level , c.cp_community_portal_user_type, c.cms_access , c.cp_access
+                    FROM org_users as u 
+                    LEFT JOIN org_contacts as c ON u.id =  c.user_id  
+                    WHERE u.id = {$user_id} and cp_org_id = {$default_agency_id} and cp_org_id IS NOT NULL";
+            $sth = $dbh->query($qry);
+            $f = $sth->fetch(PDO::FETCH_OBJ);
+            // update session
+            $_SESSION['userLevel'] = $f->cp_access_level;
+            $_SESSION['cp_access'] = $f->cp_access;
+            $_SESSION['cms_access'] = $f->cms_access;
+            $_SESSION['user_type'] = $f->cp_community_portal_user_type;
+            $_SESSION['level_1'] = $level1;
+            $_SESSION['cp_user_level'] = $f->cp_user_level;
+            $_SESSION['agency_id'] = $default_agency_id;
+
+            // update org_contacts table
+            $org_contacts_id = $f->id;
+            $u_data = [
+                'id' => $org_contacts_id,
+                'cp_level_1' => $level1,
+                'cp_notification' => $_POST['cp_notification']
+            ];   
+           
+            $_db->insertUpdateSQL($u_data, 'org_contacts');
+    
+        }
 
         $err = urlencode("Profile Updated");
         $_db->redir('directory/editmyprofile?e=' . $err);

@@ -45,7 +45,7 @@ $(document).ready(function(){
         $(".alert-success").slideUp(500);
     });
     // failure message hide
-    $(".alert-error").fadeTo(2000, 500).slideUp(500, function(){
+    $(".alert-error").fadeTo(5000, 500).slideUp(500, function(){
         $(".alert-error").slideUp(500);
     });
 

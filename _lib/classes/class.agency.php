@@ -31,14 +31,33 @@ class agency
     }
 
     public function getUserAccess($user_id){
-        $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.cp_org_id, 
-        org_contacts.status, org_contacts.cp_access_level , org_users.default_org_id, org_users.community_portal,
-        org_users.case_management , org_information.name as org_name, org_information.community_portal as org_community_portal, org_information.case_management as org_case_management
-        from org_contacts 
-        left join org_users  on org_contacts.user_id = org_users.id
-        left join org_information  on org_information.id = org_contacts.cp_org_id
-        where org_users.id = {$user_id}");
-        return $sth->fetchAll(PDO::FETCH_ASSOC);
+        
+        $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.cms_org_id, org_contacts.cp_org_id , 
+        (CASE WHEN cp_parent_agency IS NOT NULL THEN 'CP' ELSE 'CMS' END) as portal_type,
+        (CASE WHEN cp_parent_agency IS NOT NULL THEN 'Agency' ELSE 'Organization' END) as portal_org_type,
+        (CASE WHEN cp_org_id IS NOT NULL THEN cp_org_id ELSE cms_org_id END) as org_id,
+        org_contacts.status, org_contacts.cms_access_level , org_users.default_org_id, 
+        org_users.default_portal_type, org_users.default_agency_id,org_users.homescreen_org_id, org_contacts.cp_access as community_portal, 
+        org_contacts.cms_access as case_management , org_information.name as org_name, 
+        org_information.community_portal as org_community_portal, 
+        org_information.case_management as org_case_management from 
+        org_contacts left join 
+        org_users on org_contacts.user_id = org_users.id 
+        left join org_information on org_information.id = org_contacts.cms_org_id or org_information.cp_parent_child = org_contacts.cp_org_id where org_users.id = {$user_id}");
+       
+        return $sth ? $sth->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    
+    public function BuildUserAgencyDropDown($default_agency_id){
+        $user_id = $_SESSION['user_id'];
+        $sth = $this->dbh->query("select user_id, cp_org_id as agency_id, o.name as agency_name from org_contacts join org_information o on org_contacts.cp_org_id = o.cp_parent_child where user_id = $user_id and cp_org_id IS NOT NULL");
+        $htm = "<option value=''>Select Default Agency</option>";
+
+        while ($f = $sth->fetch(PDO::FETCH_OBJ)) {
+            $htm .= "<option value='".$f->agency_id."' ".($f->agency_id == $default_agency_id ? "selected" : "").">".$f->agency_name."</option>";
+        }
+        return $htm;
     }
 
     public function build_services_view()
@@ -358,7 +377,7 @@ class agency
     public function get_agency_name($agency_id)
     {
         $dbh = $this->db->initDB();
-        $qry = "select agency_name from cp_directory_agency where agency_id = :agency_id";
+        $qry = "select name as agency_name from org_information where cp_parent_child = :agency_id";
         $sth = $dbh->prepare($qry);
         $sth->execute(array(":agency_id" => $agency_id));
         return $sth->fetchColumn();
@@ -422,7 +441,7 @@ class agency
 
     public function SetParentAgencySession()
     {
-        $qry = "select agency_id, parent_agency from cp_directory_agency where agency_id = :agencyId";
+        $qry = "select cp_parent_child as agency_id, cp_parent_agency as parent_agency from org_information where cp_parent_child = :agencyId";
         $sth = $this->dbh->prepare($qry);
         $sth->execute([':agencyId' => $_SESSION['agency_id']]);
 
@@ -437,7 +456,7 @@ class agency
 
     public function GetAgencyLevel1($agencyId)
     {
-        $qry = "select level_1 from cp_directory_agency where agency_id = :agencyId";
+        $qry = "select level_1 from org_information where cp_parent_child = :agencyId";
         $sth = $this->dbh->prepare($qry);
         $sth->execute([':agencyId' => $agencyId]);
         return $sth->fetchColumn();
@@ -445,7 +464,7 @@ class agency
 
     public function GetAgencyStatus($agencyId)
     {
-        $qry = "select status from cp_directory_agency where agency_id = :agencyId";
+        $qry = "select status from org_information where cp_parent_child = :agencyId";
         $sth = $this->dbh->prepare($qry);
         $sth->execute([':agencyId' => $agencyId]);
         return $sth->fetchColumn();
@@ -453,7 +472,7 @@ class agency
 
     public function GetAgencyLevel($agencyId)
     {
-        $qry = "select agency_level from cp_directory_agency where agency_id = :agencyId";
+        $qry = "select agency_level from org_information where cp_parent_child = :agencyId";
         $sth = $this->dbh->prepare($qry);
         $sth->execute([':agencyId' => $agencyId]);
         return $sth->fetchColumn();
@@ -520,10 +539,11 @@ class agency
     }
 
     public function SetContactUs()
-    {
+    {   
+        $parent_agency = isset($_SESSION['parent_agency']) ? $_SESSION['parent_agency'] : 0;
         $qry = 'select * from cp_contact_us where parent_agency_id = :id';
         $sth = $this->dbh->prepare($qry);
-        $sth->execute([':id' => $_SESSION['parent_agency']]);
+        $sth->execute([':id' => $parent_agency]);
         return $sth->fetch(PDO::FETCH_ASSOC);
     }
 

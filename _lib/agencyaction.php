@@ -95,7 +95,7 @@ class Action
             "level_1" => $level1,
             'cp_partner_type'=>$partnerType,
             'org_type'=> $parent_agency > 0 ? 'CP Child Org' : 'CP Parent Org',
-            'community_portal' => 0,
+            'community_portal' => 1,
             'case_management' => 0,
         ];  
 
@@ -298,14 +298,17 @@ class Action
         }
 
         // save data in org_contacts
+        // if invited from cp then set only cp_access = 1 , cp_user_level = 0 
         $org_cp_directory_contact = [
             'cp_org_id' => $agencyId,
-            'cp_user_level'=>$cp_user_level,
+            //'cp_user_level'=>$cp_user_level,
+            'cp_user_level'=> 0,
             'cp_community_portal_user_type'=>$community_portal_user_type,
             'cp_level_1'=>$level_1,
             'contact_license_type'=>$contact_license_type,
             'cp_contact_type'=>$contact_type, 
-            'cp_access' => $community_portal,
+            //'cp_access' => $community_portal,
+            'cp_access' => 1,
             'cms_access' => $case_management,
             'user_id' => $userId
         ];
@@ -454,10 +457,13 @@ class Action
         
         $community_portal_user_type = $_POST['community_portal_user_type'];
         $cp_user_level = 0;
+        $cp_access = 0;
         $user_level = NULL;
         if($community_portal_user_type == 'ADMIN'){
             # (CP) Org ADMIN = (CMS) ADMIN
             $user_level = 'ADMIN';
+            $cp_user_level = 1;
+            $cp_access = 1;
         }
         if($community_portal_user_type == 'USER'){
             # (CP) Org CONTACT = (CMS) PROJECT MANAGER
@@ -526,6 +532,7 @@ class Action
                         }
                     }
 
+
                     // save data in org_contacts table
                     $org_contacts_data = [
                         'cp_org_id'=> $agencyId,
@@ -537,6 +544,8 @@ class Action
                         'cp_level_1'=>$level_1,
                         'contact_license_type'=>$licenseType,
                         'cp_contact_type'=>$contactType,
+                        'cp_access'=>$cp_access,
+                        'cms_access'=>0,
                     ];
                     $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');
                 

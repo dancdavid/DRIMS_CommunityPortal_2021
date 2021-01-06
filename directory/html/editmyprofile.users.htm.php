@@ -1,11 +1,16 @@
 <?php
 $_level = new Level1();
 $_users = new users();
+$_agency = new agency();
 $f = $_users->GetMyProfile();
-
 $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
 ?>
 
+<?php if(!$f['default_agency_id']){ ?>
+    <div class="alert alert-error">
+        <strong>Failure!</strong> <?= $_GET['err'] ?>
+    </div>
+<?php } ?>
 
 <div class="col-sm-12 col-xs-12">
     <form class="form-horizontal" id="editUser" role="form" method="post" action="../_lib/action.php?action=<?php echo $_users->encode('UpdateMyProfile'); ?>">
@@ -48,11 +53,10 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                 </div>
 
                 <div class="form-group">
-                    <div class="col-sm-5 col-sm-offset-1" id="emailDiv">
-
-                        <label for="level1" class="control-label"><?= $_SESSION['Level1_Label'] ?></label>
-                        <select name="level_1[]" class="form-control" id="level1" multiple required>
-                            <?= $_level->BuildLevelDropDown($f['level_1']) ?>
+                    <div class="col-sm-5 col-sm-offset-1" id="defaultAgencyDiv">
+                        <label for="level1" class="control-label"><?= 'Set Default Agency' ?></label>
+                        <select name="default_agency_id" class="form-control" id="default_agency_id" required>
+                            <?= $_agency->BuildUserAgencyDropDown($f['default_agency_id']); ?>
                         </select>
                     </div>
                     <div class="col-sm-2"></div>
@@ -62,8 +66,19 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                     </div>
                 </div>
 
+                <?php 
+                    if($f['default_agency_id']){ 
+                        // if default agency is set then only run the below code
+                ?>
                 <div class="form-group">
-                    <div class="col-md-2 col-md-offset-1">
+                    <div class="col-sm-5 col-sm-offset-1" id="emailDiv">
+                        <label for="level1" class="control-label"><?= $_SESSION['Level1_Label'] ?></label>
+                        <select name="level_1[]" class="form-control" id="level1" multiple required>
+                            <?= $_level->BuildLevelDropDown($f['level_1']) ?>
+                        </select>
+                    </div>
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-5 col-sm-offset-0">
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="cp_notification" value="YES" <?= $notificationChk ?>> <b>Notifications On</b>
@@ -74,6 +89,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
 <!--                        <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#modalUpdatePassword">Update Password</button>-->
                     </div>
                 </div>
+                <?php } ?>
 
 
                 <div class="col-sm-12">&nbsp;</div>

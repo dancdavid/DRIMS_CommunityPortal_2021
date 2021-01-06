@@ -66,11 +66,12 @@ class Level1 extends db {
     }
 
     public function GetLevel1Label()
-    {
+    {   
+        $parent_agency = isset($_SESSION['parent_agency']) ? $_SESSION['parent_agency'] : 0;
         $qry = "select label from cp_level_1_label where parent_agency_id = :parent";
         $dbh = $this->initDB();
         $sth = $dbh->prepare($qry);
-        $sth->execute([':parent' => $_SESSION['parent_agency']]);
+        $sth->execute([':parent' => $parent_agency]);
         return $sth->fetchColumn();
     }
 

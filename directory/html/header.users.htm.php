@@ -53,7 +53,7 @@
 </head>
 <body>
 <!-- Fixed navbar -->
-
+<?php $_parent_agency = isset($_SESSION['parent_agency']) ? $_SESSION['parent_agency'] : 0; ?>
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -64,9 +64,9 @@
                 <span class="icon-bar"></span>
             </button>
             <?php
-            $_agency = new agency($_SESSION['parent_agency']);
-            if ($_agency->agency_logo_exists($_SESSION['parent_agency']) >= 1) {
-                echo '<img src="' . $_agency->get_agency_logo($_SESSION['parent_agency']) . '" style="max-width:100px; padding-top:5px"">';
+            $_agency = new agency($_parent_agency);
+            if ($_agency->agency_logo_exists($_parent_agency) >= 1) {
+                echo '<img src="' . $_agency->get_agency_logo($_parent_agency) . '" style="max-width:100px; padding-top:5px"">';
             } else {
                 echo '<img src="images/DRIMS_logo_dark_bg.png" style="max-width:100px; padding-top:5px">';
             }
@@ -92,7 +92,7 @@
 
                 $dbh = $_db->initDB();
                 $sth = $dbh->prepare($qry);
-                $sth->execute([':uid' => $_SESSION['user_id'], ':pid' => $_SESSION['parent_agency']]);
+                $sth->execute([':uid' => $_SESSION['user_id'], ':pid' => $_parent_agency]);
 
                 if ($sth->rowCount() > 0) {
 
@@ -181,15 +181,18 @@
                     $accessData = $_agency->getUserAccess($_SESSION['user_id']);
                     $upper_data = '';
                     $lower_data = '';
+                    $default_agency_id = '';
 
                     foreach($accessData as $u_access){
                         $u_id = $u_access['user_id'];
-                        $o_id = $u_access['cp_org_id'];
+                        $o_id = $u_access['org_id'];
                         $default_org_id = $u_access['default_org_id'];
+                        $default_agency_id = $u_access['default_agency_id'];
                         $community_portal_access = $u_access['community_portal'];
                         $case_management_access = $u_access['case_management'];
                         $org_community_portal = $u_access['org_community_portal'];
                         $org_case_management = $u_access['org_case_management'];
+                        $portal_org_type = $u_access['portal_org_type'] . ' - ';
                         $org_name = $u_access['org_name'];
                         $encoded_org_id = $_core->encode($o_id);
 
@@ -200,14 +203,14 @@
                             // set default org_id in the session
                             $_SESSION['orgID'] = $default_org_id;
                             if($org_case_management){
-                                $upper_data = '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$org_name.' (Case Management)</a><li><hr/>';
+                                $upper_data = '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$portal_org_type.$org_name.' (Case Management)</a><li><hr/>';
                             }
                         }else{
                             if($org_community_portal){
-                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$org_name.' (Community Portal)</a><li>';
+                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li>';
                             }
                             if($org_case_management){
-                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.$root_cms_url.'" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)">'.$org_name.' (Case Management) </a><li>';
+                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.$root_cms_url.'" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)">'.$portal_org_type.$org_name.' (Case Management) </a><li>';
                             }
                             //$lower_data .= '<br/>';
                         }
@@ -215,7 +218,7 @@
                 
                 ?>
 
-                <?php if($upper_data || $lower_data){ ?>
+                <?php if(($upper_data || $lower_data) && $default_agency_id){ ?>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" id="access_management" data-toggle="dropdown">Access Management<span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
@@ -294,7 +297,7 @@
     <div class="row">
         <div class="col">
             <?php
-            if ($_agency->agency_logo_exists($_SESSION['parent_agency']) >= 1) {
+            if ($_agency->agency_logo_exists($_parent_agency) >= 1) {
                 echo '<a href="https://drims.org" target="_blank" alt="Click Here To Learn More About DRIMS"><img src="images/DRIMS_powered_by_LOGO_2_transparent_bg.gif" style="max-width:100px; padding-left:15px;"></a>';
             }
             ?>
