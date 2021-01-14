@@ -67,6 +67,15 @@ $(document).ready(function(){
 		}
     });
 
+    // access management dropdown
+    $(".access-link").on('click', function() {
+        setTimeout(function(){
+            $this = $(".access-link");
+            $this.parent('li').parent('ul').parent('li').addClass('open');
+         }, 10);
+        
+    });
+
 
     $('input').focus(function() {
         $('#search_results').hide();

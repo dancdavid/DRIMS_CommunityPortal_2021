@@ -218,18 +218,6 @@
                 
                 ?>
 
-                <?php if(($upper_data || $lower_data) && $default_agency_id){ ?>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" id="access_management" data-toggle="dropdown">Access Management<span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                                <?php 
-                                    echo $upper_data;
-                                    echo  $lower_data;
-                                ?>
-                        </ul>
-                    </li>
-                <?php } ?>
-
             </ul>
 
 
@@ -237,6 +225,17 @@
                 <li class="dropdown">
                     <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog"></span> Welcome <?= $_SESSION['user_name']; ?> </a>
                     <ul class="dropdown-menu" role="menu">
+                        <?php if(($upper_data || $lower_data) && $default_agency_id){ ?>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle access-link" id="access_management" data-toggle="dropdown">Access Management<span class="caret"></span></a>
+                                <ul class="dropdown-menu access-dropdown" role="menu">
+                                        <?php 
+                                            echo $upper_data;
+                                            echo  $lower_data;
+                                        ?>
+                                </ul>
+                            </li>
+                        <?php } ?>
                         <li><a href="editmyprofile">My Profile</a></li>
                         <?php
                         if ($_SESSION['cms_access']) {
