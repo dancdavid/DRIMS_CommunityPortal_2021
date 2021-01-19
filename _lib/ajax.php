@@ -490,20 +490,18 @@ class Action
         }
     }
 
-    // change organization
+    // change organization/agency
     public function changeOrg()
     {      
         $_core = new core();
+      
         $oid = $_core->gpGet('oid');
+        $portal_type = $_core->gpGet('portal_type');
         $org_id = $_core->decode($oid);
+        $user_id = $_SESSION['user_id'];
+      
 
-        $dbh = $this->_db->initDB();
-        $qry = "update org_users 
-        set default_org_id = '{$org_id}' 
-        where id = '{$_SESSION['userID']}'";
-        $sth = $dbh->prepare($qry);
-        $sth->execute();
-        $_SESSION['orgID'] = $org_id;
+        $result = $this->_db->switchOrganization($org_id, $user_id, $portal_type);
         echo $qry;
 
     }

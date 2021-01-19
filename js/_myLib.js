@@ -20,10 +20,11 @@ function strtolower (str) {
 $(document).ready(function(){
     $('body').on('click','.access-login', function(){
         var oid = $(this).attr('attr-oid');
+        var portal_type = $(this).attr('attr-portal-type');
         var redirect_url = $(this).attr('redirect-url');
         if (confirm("You are currently leaving this organization space, do you wish to continue?") == true) {
             $.ajax({
-                url: '../_lib/ajax.php?action=changeOrg&oid='+oid,
+                url: '../_lib/ajax.php?action=changeOrg&oid='+oid+'&portal_type='+portal_type,
                 type: 'POST',
                 async: false,
                 data: { },

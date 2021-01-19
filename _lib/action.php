@@ -80,6 +80,29 @@ class Action {
         header("Location: " . ROOT_URL . $landingPage);
 
     }
+
+    /* Autologin to Community portal Portal from CMS */
+    public function autologin()
+    {
+        global $_db , $_core;
+        $uid = $_core->gpGet('uid'); // encoded org id
+        $user_id = $_core->decode($uid);
+        $oid = $_core->gpGet('oid'); // encoded org id
+        $org_id = $_core->decode($oid);
+        $portal_type = $_core->gpGet('portal_type');
+        
+
+        $dbh = $_db->initDB();
+        $sth = $dbh->query("select email, password from org_users where id = '{$user_id}'");
+        $f = $sth->fetch(PDO::FETCH_OBJ);
+        
+        $email = $f->email;
+        $saltedPassword = $f->password;
+
+        //$_db->validateLogin($email, $pass = '', 'org_users', $landingPage, $saltedPassword, $login_type = 'autologin');
+        $_db->switchOrganization($org_id, $user_id, $portal_type);
+        $_core->redir('directory/');
+    }
     
     public function forgot_password() {
         global $_core, $_db;

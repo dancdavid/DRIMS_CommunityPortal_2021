@@ -195,22 +195,26 @@
                         $portal_org_type = $u_access['portal_org_type'] . ' - ';
                         $org_name = $u_access['org_name'];
                         $encoded_org_id = $_core->encode($o_id);
+                        $encoded_user_id = $_core->encode($u_id);
 
                         // Root CMS URL
-                        $root_cms_url = ROOT_CMS_URL."_lib/oaction.php?action=autologin&uid=$u_id";
+                        $root_cms_url = ROOT_CMS_URL."_lib/oaction.php?action=autologin&uid=$encoded_user_id&oid=$encoded_org_id&portal_type=CMS";
 
-                        if($default_org_id == $o_id){
+                        if($default_agency_id == $o_id){
                             // set default org_id in the session
                             $_SESSION['orgID'] = $default_org_id;
-                            if($org_case_management){
+                            if($case_management_access){
                                 $upper_data = '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$portal_org_type.$org_name.' (Case Management)</a><li><hr/>';
                             }
-                        }else{
-                            if($org_community_portal){
-                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li>';
+                            if($community_portal_access){
+                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-portal-type="CP" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li>';
                             }
-                            if($org_case_management){
-                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.$root_cms_url.'" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)">'.$portal_org_type.$org_name.' (Case Management) </a><li>';
+                        }else{
+                            if($community_portal_access){
+                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-portal-type="CP"  attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li>';
+                            }
+                            if($case_management_access){
+                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.$root_cms_url.'" attr-portal-type="CMS"  attr-oid="'.$encoded_org_id.'" href="javascript:void(0)">'.$portal_org_type.$org_name.' (Case Management) </a><li>';
                             }
                             //$lower_data .= '<br/>';
                         }
@@ -239,12 +243,12 @@
                         <li><a href="editmyprofile">My Profile</a></li>
                         <?php
                         if ($_SESSION['cms_access']) {
-                            $current_user_id = $_SESSION['userID'];
+                            /*$current_user_id = $_SESSION['userID'];
                             $cmsurl = ROOT_CMS_URL."_lib/oaction.php?action=autologin&uid=$current_user_id";
                             echo '
                             <li class="nav-item ml-3">
                                 <a class="nav-link" href="' . $cmsurl . ' ">Case Management</a>
-                            </li>';
+                            </li>';*/
                         }
                         ?>
                         <li><a href="../_lib/action.php?action=logout">Sign out</a></li>

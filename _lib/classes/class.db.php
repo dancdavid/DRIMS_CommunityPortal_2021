@@ -232,11 +232,11 @@ class db extends core
                         $e = 'accessdenied';
                         $link = "$landingPage/?e=$e";
                     }
-                    /*else if(!$this->checkInstanceURL($f->id)){
+                    else if(!$this->checkInstanceURL($f->id)){
                         # If the login url is incorrect
                         $e = 'incorrecturl';
                         $link = "$landingPage/?e=$e";
-                    }*/
+                    }
                     else{
                         # Save data for autologin
                         if($f->case_management){
@@ -305,6 +305,37 @@ class db extends core
         }
     }
 
+    public function switchOrganization($org_id, $user_id, $portal_type){
+        $qry = '';
+
+        if($portal_type == "CMS"){
+            // goto CMS
+            $_SESSION['orgID'] = $org_id;
+            $qry = 'CMS LOGIN SUCCESS';
+        }
+
+        if($portal_type == "CP"){
+            // goto CP
+            $dbh = $this->initDB();
+            $qry = "SELECT c.id , c.cp_user_level, c.cp_access_level , c.cp_community_portal_user_type, c.cms_access , c.cp_access
+                    FROM org_users as u 
+                    LEFT JOIN org_contacts as c ON u.id =  c.user_id  
+                    WHERE u.id = {$user_id} and cp_org_id = {$org_id} and cp_org_id IS NOT NULL";
+            $sth = $dbh->query($qry);
+            $f = $sth->fetch(PDO::FETCH_OBJ);
+            // update session
+            //$_SESSION['userLevel'] = $f->cp_access_level;
+            $_SESSION['cp_access'] = $f->cp_access;
+            $_SESSION['cms_access'] = $f->cms_access;
+            $_SESSION['user_type'] = $f->cp_community_portal_user_type;
+            $_SESSION['cp_user_level'] = $f->cp_user_level;
+            $_SESSION['agency_id'] = $org_id;
+            $qry = 'CP LOGIN SUCCESS';
+        }
+
+        return $qry;
+    }
+
     // Check Instance URL
     private function checkInstanceURL($userId){
         $dbh = $this->initDB();
@@ -315,9 +346,10 @@ class db extends core
             return true;
         }
 
-        $sth = $dbh->prepare("select count(*) as cnt from org_contacts 
-        join org_information on org_information.id = org_contacts.cp_org_id 
-        where org_contacts.user_id = :user_id and custom_login_url = :custom_login_url ");
+        $sth = $dbh->prepare(" select count(*) as cnt from org_contacts 
+        join org_information on org_information.cp_parent_child = org_contacts.cp_org_id 
+        join cp_org_instance on cp_org_instance.cp_org_id = org_information.cp_parent_child 
+        where org_contacts.user_id = :user_id and cp_org_instance.custom_url = :custom_login_url  ");
         $sth->execute(array(":user_id" => $userId, ":custom_login_url" => $custom_login_url));
         $count = $sth->fetchColumn();
         return $count;
