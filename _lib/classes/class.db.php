@@ -157,12 +157,17 @@ class db extends core
         return $html;
     }
 
-    public function validateLogin($email, $pwd, $table, $landingPage = '')
+    public function validateLogin($email, $pwd, $table, $landingPage = '', $saltedPassword = '', $loginType = '')
     {
 
         try {
 
-            $password = $this->getSaltedPassword($email, $pwd, $table);
+        
+            if($saltedPassword){
+                $password = $saltedPassword;
+            }else{
+                $password = $this->getSaltedPassword($email, $pwd, $table);
+            }
 
             $dbh = $this->initDB();
             $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -293,7 +298,10 @@ class db extends core
 //                }
             }
 
-            $this->redir($link);
+            if($loginType != 'autologin'){
+                // if login type is not autologin then only redirect
+                $this->redir($link);
+            }
         } catch (PDOException $e) {
             if (DEBUG) {
                 die($e->getMessage());
@@ -340,8 +348,8 @@ class db extends core
     private function checkInstanceURL($userId){
         $dbh = $this->initDB();
         $custom_login_url = $this->getFirstURLSegment();
-
-        if(!$custom_login_url){
+        $isSigninKeyword = (strpos($custom_login_url, 'signin') !== false);
+        if(!$custom_login_url || $isSigninKeyword){
             // if no custom URL then return true , means only base URL
             return true;
         }

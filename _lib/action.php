@@ -98,8 +98,12 @@ class Action {
         
         $email = $f->email;
         $saltedPassword = $f->password;
+  
+        if(!(isset($_SESSION['userID']) && $_SESSION['userID'])){
+            // if user session does not exist then generate login session
+            $_db->validateLogin($email, $pass = '', 'org_users', $landingPage = '', $saltedPassword, $login_type = 'autologin');
+        }
 
-        //$_db->validateLogin($email, $pass = '', 'org_users', $landingPage, $saltedPassword, $login_type = 'autologin');
         $_db->switchOrganization($org_id, $user_id, $portal_type);
         $_core->redir('directory/');
     }
