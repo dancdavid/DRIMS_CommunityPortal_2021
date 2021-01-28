@@ -283,37 +283,53 @@ class Action
             $agencyId = $orgId;
 
             $cp_parent_agency = $_SESSION['agency_id'];
-            if($cp_parent_agency < 0){
+            /*if($cp_parent_agency < 0){
                 # Parent Agency
                 $org_type = 'CP Parent Org';
             }else{
                 # Child Agency
                 $org_type = 'CP Child Org';
-            }
-            $this->_db->insertUpdateSQL(['id' => $orgId, 'org_type' => $org_type, 'cp_parent_child' => $agencyId, 'cp_parent_agency' => $cp_parent_agency, 'related_to_agency' => $agencyId ], 'org_information');
+            }*/
+            $this->_db->insertUpdateSQL(['id' => $orgId, 'cp_parent_child' => $agencyId, 'cp_parent_agency' => $cp_parent_agency, 'related_to_agency' => $agencyId ], 'org_information');
         }
 
         if($inviteAlreadySent){
             $this->_db->redir('directory/add_agency?e=Invite Already Sent before');
         }
 
-        // save data in org_contacts
-        // if invited from cp then set only cp_access = 1 , cp_user_level = 0 
-        $org_cp_directory_contact = [
-            'cp_org_id' => $agencyId,
-            //'cp_user_level'=>$cp_user_level,
-            'cp_user_level'=> 0,
-            'cp_community_portal_user_type'=>$community_portal_user_type,
-            'cp_level_1'=>$level_1,
-            'contact_license_type'=>$contact_license_type,
-            'cp_contact_type'=>$contact_type, 
-            //'cp_access' => $community_portal,
-            'cp_access' => 1,
-            'cms_access' => $case_management,
-            'user_id' => $userId
-        ];
+        // if user's first agency invite, then set it as default
+        if($this->isFirstInvite($userId, $agencyId)){
+            $this->_db->insertUpdateSQL(['id' => $userId, 'default_agency_id' => $agencyId], 'org_users');
+        }
 
-        $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
+        // save data in org_contacts
+        if($this->isExistingOrgainzation($agencyId, $userId)){
+            // UPDATE
+            $qry = "update org_contacts 
+            set cp_org_id = '$agencyId', 
+            cp_access = '1'
+            where cms_org_id = '$agencyId' AND user_id = '$userId' ";
+          
+            $sth = $this->_dbh->prepare($qry);
+            $sth->execute();
+        }else{
+            // ADD - if invited from cp then set only cp_access = 1 , cp_user_level = 0 
+            $org_cp_directory_contact = [
+                'cp_org_id' => $agencyId,
+                //'cp_user_level'=>$cp_user_level,
+                'cp_user_level'=> 0,
+                'cp_community_portal_user_type'=>$community_portal_user_type,
+                'cp_level_1'=>$level_1,
+                'contact_license_type'=>$contact_license_type,
+                'cp_contact_type'=>$contact_type, 
+                //'cp_access' => $community_portal,
+                'cp_access' => 1,
+                //'cms_access' => $case_management,
+                'user_id' => $userId
+            ];
+
+            $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
+        }
 
         //NOTIFICATION
         $_agency = new agency();
@@ -336,8 +352,15 @@ class Action
         $_notification->sentByName = $_SESSION['user_name'];
         $_notification->sentByAgency = $_agency->get_agency_name($_SESSION['agency_id']);
         $_notification->sendEmail('add_agency_user');
-        
+
         $this->_db->redir('directory/add_agency?m=Invite Sent Successfully');
+    }
+
+    // check if Org id exist in org_contacts table for a user
+    public function isExistingOrgainzation($agencyId, $userId){
+        $qry = "select count(*) as count from org_contacts where cms_org_id = '$agencyId' and user_id = '$userId' ";
+        $sth = $this->_dbh->query($qry);
+        return $sth->fetchColumn();
     }
 
 
@@ -391,8 +414,25 @@ class Action
                     $this->_db->insertUpdateSQL(['id' => $org_id, 'org_admin_id' => $org_admin_user_id], 'org_information');
                 }
             }
-            
-            // save data in org_contacts table
+        }
+
+        // if user's first agency invite, then set it as default
+        if($this->isFirstInvite($user_id, $agencyId)){
+            $this->_db->insertUpdateSQL(['id' => $user_id, 'default_agency_id' => $agencyId], 'org_users');
+        }
+
+        // save data in org_contacts
+        if($this->isExistingOrgainzation($agencyId, $userId)){
+            // UPDATE
+            $qry = "update org_contacts 
+            set cp_org_id = '$agencyId', 
+            cp_access = '1'
+            where cms_org_id = '$agencyId' AND user_id = '$userId' ";
+          
+            $sth = $this->_dbh->prepare($qry);
+            $sth->execute();
+        }else{
+            // ADD - save data in org_contacts table
             $org_contacts_data = [
                 'cp_org_id'=> $agencyId,
                 'user_id'=> $org_admin_user_id, 
@@ -403,10 +443,10 @@ class Action
                 'cp_level_1'=>$level_1,
                 'contact_license_type'=>$licenseType,
                 'cp_contact_type'=>$contactType,
+                'cp_access' => '1'
             ];
-            $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');    
-        
-        }
+            $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts'); 
+        }   
 
 
         //NOTIFICATION
@@ -488,7 +528,7 @@ class Action
             "created_date" => $this->currentDateTime,
             "created_by" => $_SESSION['user_id'],
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
-            "community_portal" => 0,
+            "community_portal" => 1,
             "case_management" => 0,
             "agency_id" => $agencyId,
             "user_level" => $user_level
@@ -512,11 +552,11 @@ class Action
             $r = $this->_db->insertUpdateSQL($data, 'org_users');
 
             if ($r) {
-
+                $admin_user_id = $this->_db->last_inserted_id;
                 if($orgIdEnc){
                     // update org_user ID in org_information table
                     $org_id = $this->_db->decode($orgIdEnc);
-                    $org_admin_user_id = $this->_db->last_inserted_id;
+                    $org_admin_user_id = $admin_user_id;
 
                     if($user_level == 'ADMIN'){
 
@@ -531,12 +571,18 @@ class Action
                             $this->_db->insertUpdateSQL(['id' => $org_id, 'org_admin_id' => $org_admin_user_id], 'org_information');
                         }
                     }
+                }
+
+                    // if user's first agency invite, then set it as default
+                    if($this->isFirstInvite($admin_user_id, $agencyId)){
+                        $this->_db->insertUpdateSQL(['id' => $admin_user_id, 'default_agency_id' => $agencyId], 'org_users');
+                    }
 
 
                     // save data in org_contacts table
                     $org_contacts_data = [
                         'cp_org_id'=> $agencyId,
-                        'user_id'=> $org_admin_user_id, 
+                        'user_id'=> $admin_user_id, 
                         'status'=> $user_status, 
                         'cms_access_level'=> $user_level,
                         'cp_user_level'=>$cp_user_level,
@@ -549,8 +595,6 @@ class Action
                     ];
                     $this->_db->insertUpdateSQL($org_contacts_data, 'org_contacts');
                 
-                
-                }
 
                 //NOTIFICATION
                 $_agency = new agency();
@@ -589,6 +633,13 @@ class Action
 
         $this->_db->redir($link);
 
+    }
+
+    public function isFirstInvite($org_admin_user_id, $agencyId){
+       
+        $qry = "select count(*) as cnt from org_contacts where user_id = '$org_admin_user_id' and cp_org_id ='$agencyId' ";
+        $sth = $this->_dbh->query($qry);
+        return ($sth->fetchColumn() ? 0 : 1);
     }
 
     // update org_information , update org_contacts

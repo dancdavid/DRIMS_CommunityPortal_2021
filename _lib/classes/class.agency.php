@@ -312,7 +312,7 @@ class agency
     {
 
         $dbh = $this->db->initDB();
-        $qry = "select id from org_information where related_to_agency = :agency_id LIMIT 1";
+        $qry = "select id from org_information where cp_parent_child = :agency_id LIMIT 1";
         $sth = $dbh->prepare($qry);
         $sth->execute([':agency_id' => $agency_id]);
         $result = $sth->fetchColumn(); 
