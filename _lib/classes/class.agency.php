@@ -43,7 +43,7 @@ class agency
         org_information.case_management as org_case_management from 
         org_contacts left join 
         org_users on org_contacts.user_id = org_users.id 
-        left join org_information on org_information.id = org_contacts.cms_org_id or org_information.cp_parent_child = org_contacts.cp_org_id where org_users.id = {$user_id}");
+        left join org_information on org_information.id = org_contacts.cms_org_id or org_information.cp_parent_child = org_contacts.cp_org_id where org_users.id = {$user_id} order by org_contacts.id asc");
        
         return $sth ? $sth->fetchAll(PDO::FETCH_ASSOC) : [];
     }

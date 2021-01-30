@@ -271,6 +271,17 @@ class db extends core
                         }else{
                             $link = 'directory';
                         }
+
+                        $default_portal_type = $f->default_portal_type;
+                        if($default_portal_type && $default_portal_type == 'CMS' && !$loginType){
+                            // if initial login then set homescreen
+                            global $_core;
+                            $encoded_org_id = $_core->encode($f->default_org_id);
+                            $encoded_user_id = $_core->encode($f->id);
+                            $root_cms_url = ROOT_CMS_URL."_lib/oaction.php?action=autologin&uid=$encoded_user_id&oid=$encoded_org_id&portal_type=CMS";
+                            header("Location: " . $root_cms_url);
+                            exit;
+                        }
                     }
                     
                 }

@@ -508,6 +508,7 @@ class Action
         if($community_portal_user_type == 'USER'){
             # (CP) Org CONTACT = (CMS) PROJECT MANAGER
             $user_level = 'PROJECT MANAGER';
+            $cp_access = 1;
         }
 
         $user_status = 'ACTIVE'; // by default 'ACTIVE'
@@ -520,6 +521,7 @@ class Action
             "email" => $email,
             "password" => $password,
             "salt" => $salt,
+            "default_portal_type" => 'CP',
             "title" => $_POST['title'],
             "phone" => $_POST['phone'],
             "extension" => $_POST['extension'],
@@ -635,9 +637,11 @@ class Action
 
     }
 
+    # check if user's first invite
     public function isFirstInvite($org_admin_user_id, $agencyId){
        
-        $qry = "select count(*) as cnt from org_contacts where user_id = '$org_admin_user_id' and cp_org_id ='$agencyId' ";
+        //$qry = "select count(*) as cnt from org_contacts where user_id = '$org_admin_user_id' and cp_org_id ='$agencyId' ";
+        $qry = "select count(*) as cnt from org_contacts where user_id = '$org_admin_user_id' ";
         $sth = $this->_dbh->query($qry);
         return ($sth->fetchColumn() ? 0 : 1);
     }

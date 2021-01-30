@@ -1134,10 +1134,11 @@ class Action {
 
         $level1 = implode(";",$_POST['level_1']);
         $user_id = $_SESSION['user_id'];
-        $default_agency_id = $_POST['default_agency_id'];
+        $default_agency_id = '';
+        $default_homescreen = isset($_POST['default_homescreen']) ? $_POST['default_homescreen'] : '';
         $data = [
             'id' => $user_id,
-            'default_agency_id' => $default_agency_id,
+            //'default_agency_id' => $default_agency_id,
             'first_name' => $_POST['first_name'],
             'last_name' => $_POST['last_name'],
             'phone' => $_POST['phone'],
@@ -1148,7 +1149,22 @@ class Action {
             //'cp_notification' => $_POST['cp_notification']
         ];
 
-//        $this->debugData($data);
+        if($default_homescreen){
+            $temp = explode('_',$default_homescreen);
+            $default_portal_type = $temp[0];
+            $homescreen_org_id = $temp[1];
+
+            $data['default_portal_type'] = $default_portal_type;
+            if($default_portal_type == 'CP'){
+                $data['default_agency_id'] = $homescreen_org_id;
+                $default_agency_id = $homescreen_org_id;
+            }
+            if($default_portal_type == 'CMS'){
+                $data['default_org_id'] = $homescreen_org_id;
+            }
+            
+            $data['homescreen_org_id'] = $homescreen_org_id;
+        }
 
         $_db->insertUpdateSQL($data, 'org_users');
 
@@ -1164,13 +1180,13 @@ class Action {
             $sth = $dbh->query($qry);
             $f = $sth->fetch(PDO::FETCH_OBJ);
             // update session
-            $_SESSION['userLevel'] = $f->cp_access_level;
+            /*$_SESSION['userLevel'] = $f->cp_access_level;
             $_SESSION['cp_access'] = $f->cp_access;
             $_SESSION['cms_access'] = $f->cms_access;
             $_SESSION['user_type'] = $f->cp_community_portal_user_type;
             $_SESSION['level_1'] = $level1;
             $_SESSION['cp_user_level'] = $f->cp_user_level;
-            $_SESSION['agency_id'] = $default_agency_id;
+            $_SESSION['agency_id'] = $default_agency_id;*/
 
             // update org_contacts table
             $org_contacts_id = $f->id;

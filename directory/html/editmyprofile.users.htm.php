@@ -52,11 +52,67 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                     </div>
                 </div>
 
+                <?php 
+                    $all_options = '';
+                    $accessData = $_agency->getUserAccess($_SESSION['user_id']);
+                    $upper_data = '';
+                    $lower_data = '';
+                    foreach($accessData as $key => $u_access){
+                        $org_invite_type = '';
+                        $u_id = $u_access['user_id'];
+                        $o_id = $u_access['org_id'];
+                        $default_org_id = $u_access['homescreen_org_id'];
+                        $default_portal_type = $u_access['default_portal_type'];
+                        $community_portal_access = $u_access['community_portal'];
+                        $case_management_access = $u_access['case_management'];
+                        $org_community_portal = $u_access['org_community_portal'];
+                        $org_case_management = $u_access['org_case_management'];
+                        $portal_org_type = $u_access['portal_org_type'] . ' - ';
+                        $org_name = $u_access['org_name'];
+                        $default_portal_type_slug = '';
+                        $default_portal_type = ($default_portal_type ? $default_portal_type : 'CMS'); // if default portal not defined then set it to CMS
+                        $portal_type = '';
+
+                        if(!$key){
+                            # first organization who invited the user is the primary org
+                            $org_invite_type = ' [ Primary Account ] ';
+                        }
+                        
+                        $selected_value = $default_portal_type.'_'.$default_org_id;
+
+                        if($org_community_portal){
+                            $default_portal_type_slug = 'CP';
+                            $portal_type = 'Community Portal';
+                            $compare_value = $default_portal_type_slug.'_'.$o_id;
+                            $selected_val = (($selected_value == $compare_value) ? 'selected' : '');
+                            $select_option_value = $default_portal_type_slug.'_'.$o_id;
+                            $all_options .= "<option $selected_val value='$select_option_value'> $portal_org_type $org_name $org_invite_type ($portal_type)</option>";
+                        }
+                        if($org_case_management){
+                            $default_portal_type_slug = 'CMS';
+                            $portal_type = 'Case Management';
+                            $compare_value = $default_portal_type_slug.'_'.$o_id;
+                            $selected_val = (($selected_value == $compare_value) ? 'selected' : '');
+                            $select_option_value = $default_portal_type_slug.'_'.$o_id;
+                            $all_options .= "<option $selected_val value='$select_option_value'> $portal_org_type $org_name $org_invite_type ($portal_type)</option>";
+                        }
+                        
+                    }
+                
+                ?>
+
                 <div class="form-group">
-                    <div class="col-sm-5 col-sm-offset-1" id="defaultAgencyDiv">
+                    <!--<div class="col-sm-5 col-sm-offset-1" id="defaultAgencyDiv">
                         <label for="level1" class="control-label"><?= 'Set Default Agency' ?></label>
                         <select name="default_agency_id" class="form-control" id="default_agency_id" required>
-                            <?= $_agency->BuildUserAgencyDropDown($f['default_agency_id']); ?>
+                            <?php //echo $_agency->BuildUserAgencyDropDown($f['default_agency_id']); ?>
+                        </select>
+                    </div>-->
+                    <div class="col-sm-5 col-sm-offset-1">
+                        <label for="all_app_default">Default Homescreen</label>
+                        <select class="form-control" id="default_homescreen" name="default_homescreen">
+                            <option value="">Select From Options</option>
+                            <?php echo $all_options; ?>
                         </select>
                     </div>
                     <div class="col-sm-2"></div>

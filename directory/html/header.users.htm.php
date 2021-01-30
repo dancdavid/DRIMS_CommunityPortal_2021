@@ -197,17 +197,20 @@
                         $encoded_org_id = $_core->encode($o_id);
                         $encoded_user_id = $_core->encode($u_id);
 
+                        // highlight the currently viewing organization
+                        $current_org_class = (($_SESSION['agency_id'] == $o_id) ? 'bolder' : '');
+                        
                         // Root CMS URL
                         $root_cms_url = ROOT_CMS_URL."_lib/oaction.php?action=autologin&uid=$encoded_user_id&oid=$encoded_org_id&portal_type=CMS";
 
-                        if($default_agency_id == $o_id){
+                        if($_SESSION['agency_id'] == $o_id){
                             // set default org_id in the session
-                            $_SESSION['orgID'] = $default_org_id;
-                            if($case_management_access){
-                                $upper_data = '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$portal_org_type.$org_name.' (Case Management)</a><li><hr/>';
-                            }
+                            //$_SESSION['orgID'] = $default_org_id;
                             if($community_portal_access){
-                                $lower_data .= '<li><a class="dropdown-item access-login"  redirect-url="'.ROOT_URL.'directory" attr-portal-type="CP" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li>';
+                                $upper_data .= '<li><a class="dropdown-item access-login '.$current_org_class.'"  redirect-url="'.ROOT_URL.'directory" attr-portal-type="CP" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li><hr/>';
+                            }
+                            if($case_management_access){
+                                $lower_data .= '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$portal_org_type.$org_name.' (Case Management)</a><li>';
                             }
                         }else{
                             if($community_portal_access){
