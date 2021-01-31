@@ -232,6 +232,7 @@
                 <li class="dropdown">
                     <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog"></span> Welcome <?= $_SESSION['user_name']; ?> </a>
                     <ul class="dropdown-menu" role="menu">
+                        <li><a href="editmyprofile">My Profile</a></li>
                         <?php if(($upper_data || $lower_data) && $default_agency_id){ ?>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle access-link" id="access_management" data-toggle="dropdown">Access Management<span class="caret"></span></a>
@@ -243,7 +244,7 @@
                                 </ul>
                             </li>
                         <?php } ?>
-                        <li><a href="editmyprofile">My Profile</a></li>
+                        
                         <?php
                         if ($_SESSION['cms_access']) {
                             /*$current_user_id = $_SESSION['userID'];

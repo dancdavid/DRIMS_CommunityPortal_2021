@@ -192,15 +192,24 @@ class db extends core
                     $sth->execute();
                     $rows = $sth->rowCount();
                     $f = new stdClass;
+                    $hasCommunityPortalAccess = 0;
                     while($t = $sth->fetch(PDO::FETCH_OBJ)){
                         # default_agency_id = cp_org_id and cp_org_id IS NOT NULL
                         if($t->default_agency_id == $t->cp_org_id && $t->cp_org_id){
                             # get the agency data which is set as default
                             $f = $t;
                         }
+                        if($t->community_portal){
+                            # check if community_portal access exist
+                            $hasCommunityPortalAccess = $t->community_portal;
+                        }
                     }
-            
-                if($rows && empty((array)$f)){
+                if(!$hasCommunityPortalAccess){
+                    # If the user do not have access to CP 
+                    $e = 'accessdenied';
+                    $link = "$landingPage/?e=$e";
+                }
+                else if($rows && empty((array)$f)){
                         # if data exist in org_contacts table and default agency is not set then redirect to editprofile section 
                         # to set a default agency first
                         $link = 'directory/editmyprofile?err=Please set a default agency first to continue';
