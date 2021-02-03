@@ -246,8 +246,8 @@ class db extends core
                         $e = 'accessdenied';
                         $link = "$landingPage/?e=$e";
                     }
-                    else if(!$this->checkInstanceURL($f->id)){
-                        # If the login url is incorrect
+                    else if(!$this->checkInstanceURL($f->id) && !$loginType){
+                        # If the login url is incorrect and not autologin type
                         $e = 'incorrecturl';
                         $link = "$landingPage/?e=$e";
                     }
