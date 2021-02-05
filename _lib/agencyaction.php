@@ -471,7 +471,9 @@ class Action
         $_notification->sentByAgency = $_agency->get_agency_name($_SESSION['agency_id']);
         $_notification->sendEmail('add_agency_user');
         
-        $this->_db->redir('directory/agency_summary?id='.$aidEnc.'&m=Invite Sent to the selected Contact');
+        //$this->_db->redir('directory/agency_summary?id='.$aidEnc.'&m=Invite Sent to the selected Contact');
+        $this->_db->redir('directory/edit_agency_contacts?id='.$aidEnc.'&uid='.$uidEnc.'&m=Invite Sent to the selected Contact');
+        
     }
 
     # insert into org_users , update org_information
