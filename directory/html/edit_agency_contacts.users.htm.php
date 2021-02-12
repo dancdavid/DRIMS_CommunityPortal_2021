@@ -8,10 +8,12 @@ $agency_id = $_core->decode($_core->gpGet('id'));
 $_agency = new agency($agency_id);
 $contact_id = $_core->decode($_core->gpGet('uid'));
 $f = $_agency->edit_agency_contact($contact_id, $agency_id);
-
+$disabled = "";
 ?>
 <div class="col-sm-12 col-xs-12">
-    <?php if(isset($_GET['m']) && $_GET['m']){ ?>
+    <?php if(isset($_GET['m']) && $_GET['m']){ 
+        $disabled = "readonly"; # set firstname , lastname , email to disabled when sening invite to a contact
+    ?>
         <div class="alert alert-success">
         <strong>Success!</strong> <?= $_GET['m'] ?>
     </div>
@@ -31,15 +33,15 @@ $f = $_agency->edit_agency_contact($contact_id, $agency_id);
                         <div class="form-group">
                             <div class="col-sm-4  col-xs-4">
                                 <label for="fname" class="control-label">First Name <span class="text-danger">*</span></label>
-                                <input type="input" name="first_name" class="form-control" id="first_name" value="<?= $f['first_name'] ?>" required>
+                                <input type="input" name="first_name" class="form-control" id="first_name" value="<?= $f['first_name'] ?>" required <?= $disabled; ?>>
                             </div>
                             <div class="col-sm-4  col-xs-4">
                                 <label for="lname" class="control-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="input" name="last_name" class="form-control" id="last_name" value="<?= $f['last_name'] ?>" required>
+                                <input type="input" name="last_name" class="form-control" id="last_name" value="<?= $f['last_name'] ?>" required <?= $disabled; ?>>
                             </div>
                             <div class="col-sm-4 col-xs-4" id="emailDiv">
                                 <label class="control-label" for="email">Email <span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control" id="contact_email"  value="<?= $f['email'] ?>" required>
+                                <input type="email" name="email" class="form-control" id="contact_email"  value="<?= $f['email'] ?>" required <?= $disabled; ?>>
                                 <span id="emailIcon"></span>
                                 <div id="error"></div>
                             </div>
