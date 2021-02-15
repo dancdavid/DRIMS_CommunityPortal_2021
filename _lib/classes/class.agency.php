@@ -296,15 +296,16 @@ class agency
         return $sth->fetchColumn();
     }
 
-    public function get_agency($agency_id)
+    public function get_agency($agency_id, $org_id = '')
     {
+        $whereQuery = ($agency_id ? "cp_parent_child = $agency_id" : "id = $org_id");
         $dbh = $this->db->initDB();
         $qry = "select name as agency_name, org_phone as agency_telephone, org_fax as agency_fax, address as agency_address,
         city as agency_city, state as agency_state, zipcode as agency_zipcode, description as description, type as user_type,
         url as agency_url, status , cp_parent_child as agency_id, cp_parent_agency as parent_agency, cp_partner_type as partner_type, org_information.level_1
-         from org_information where cp_parent_child = :agency_id";
+         from org_information where ".$whereQuery;
         $sth = $dbh->prepare($qry);
-        $sth->execute(array(":agency_id" => $agency_id));
+        $sth->execute();
         return $sth->fetch(PDO::FETCH_ASSOC);
     }
 

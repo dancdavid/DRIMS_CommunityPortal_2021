@@ -358,7 +358,7 @@ class Action
         $_notification->sendEmail('add_agency_user');
 
         //$this->_db->redir('directory/add_agency?m=Invite Sent Successfully');
-        $this->_db->redir('directory/edit_agency_info?id='.$aidEnc.'&m=Invite Sent Successfully');
+        $this->_db->redir('directory/edit_agency_info?id='.$aidEnc.'&oid='.$oidEnc.'&m=Invite Sent Successfully');
     }
 
     // check if Org id exist in org_contacts table for a user

@@ -1,8 +1,10 @@
 <?php
 $_core = new core();
 $agency_id = $_core->decode($_core->gpGet('id'));
+$org_id = $_core->decode($_core->gpGet('oid'));
 $_agency = new agency();
-$f = $_agency->get_agency($agency_id);
+
+$f = $_agency->get_agency($agency_id, $org_id);
 
 $_level = new Level1();
 $_partner = new PartnerType();
