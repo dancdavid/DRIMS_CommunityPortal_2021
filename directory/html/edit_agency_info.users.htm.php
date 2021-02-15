@@ -9,6 +9,11 @@ $_partner = new PartnerType();
 $_db = new db();
 ?>
 <div class="col-sm-12 col-xs-12">
+    <?php if(isset($_GET['m']) && $_GET['m']){ ?>
+        <div class="alert alert-success">
+        <strong>Success!</strong> <?= $_GET['m'] ?>
+    </div>
+    <?php } ?>
     <div class="panel panel-danger">
         <div class="panel-heading">
             <h3 class="panel-title"><font class="text-primary"><?php echo strtoupper($_agency->get_agency_name($agency_id)); ?></font> <span class="glyphicon glyphicon-chevron-right"

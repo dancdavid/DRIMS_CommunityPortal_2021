@@ -242,9 +242,12 @@ class Action
         // org id
         $oidEnc = $this->_db->gpGet('oid');
         $orgId = $this->_db->decode($oidEnc);
-        // agency id
-        //$aidEnc = $this->_db->gpGet('aid');
-        //$agencyId = $this->_db->decode($aidEnc);
+        
+        // agency admin user to which invite is sent
+        $aidEnc = $this->_db->gpGet('aid');
+        $agencyIdInvited = $this->_db->decode($aidEnc);
+
+        // Inviting agency (current agency in session)
         $agencyId = $_SESSION['agency_id'];
 
         // check if invite already sent earlier
@@ -354,7 +357,8 @@ class Action
         $_notification->sentByAgency = $_agency->get_agency_name($_SESSION['agency_id']);
         $_notification->sendEmail('add_agency_user');
 
-        $this->_db->redir('directory/add_agency?m=Invite Sent Successfully');
+        //$this->_db->redir('directory/add_agency?m=Invite Sent Successfully');
+        $this->_db->redir('directory/edit_agency_info?id='.$aidEnc.'&m=Invite Sent Successfully');
     }
 
     // check if Org id exist in org_contacts table for a user
