@@ -243,8 +243,9 @@ class Action
         $oidEnc = $this->_db->gpGet('oid');
         $orgId = $this->_db->decode($oidEnc);
         // agency id
-        $aidEnc = $this->_db->gpGet('aid');
-        $agencyId = $this->_db->decode($aidEnc);
+        //$aidEnc = $this->_db->gpGet('aid');
+        //$agencyId = $this->_db->decode($aidEnc);
+        $agencyId = $_SESSION['agency_id'];
 
         // check if invite already sent earlier
         $qry = "select count(*) as CNT from org_contacts where cp_org_id = '$agencyId' and user_id = '$userId' ";
