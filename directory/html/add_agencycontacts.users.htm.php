@@ -131,6 +131,36 @@ $agency_name = $_agn->get_agency_name($_core->decode($_core->gpGet('id')));
         </table>
     </div>
 </div>
+
+<!-- modal Inactive Contact -->
+<div class="modal fade" id="modalInactiveContact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title text-danger" id="myModalLabel">Inactive User</h4>
+            </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <div class="col-sm-12  col-xs-12">
+                            <p>
+                                This email is associated to a user who is no longer active within their associated Organization or DRIMS tools. 
+                                Please verify the email address is correct or add a new one to invite the user. 
+                                If you feel this is an error, please contact DRIMS technical support for assistance.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top:50px">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+           
+        </div>
+    </div>
+</div>
+
+
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>

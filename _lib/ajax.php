@@ -103,7 +103,7 @@ class Action
         $_core = new core();
         $agency_name = $_POST['agency_name'];
         $dbh = $this->_db->initDB();
-        $sth = $dbh->query("select org_information.id as organization_id , org_contacts.cms_org_id as org_id,org_contacts.user_id,org_information.name , 
+        $sth = $dbh->query("select org_information.id as organization_id , org_information.status, org_contacts.cms_org_id as org_id,org_contacts.user_id,org_information.name , 
          org_information.cp_parent_child as agency_id, 
          org_users.first_name as user_fname, org_users.last_name as user_lname, org_users.email as user_mail 
          from org_contacts 
@@ -113,7 +113,7 @@ class Action
          
          UNION
 
-         select org_information.id as organization_id , org_contacts.cp_org_id as org_id,org_contacts.user_id,org_information.name
+         select org_information.id as organization_id , org_information.status, org_contacts.cp_org_id as org_id,org_contacts.user_id,org_information.name
           , org_information.cp_parent_child as agency_id, 
          org_users.first_name as user_fname, org_users.last_name as user_lname, org_users.email as user_mail 
          from org_contacts 
@@ -138,15 +138,24 @@ class Action
             //if(!$agency_name){
                 $dataExist = true;
                 $org_name = $f->name;
+                $org_status = $f->status; // ACTIVE | IN-ACTIVE
                 $user_name = $f->user_fname .' '. $f->user_lname;
                 $user_mail = $f->user_mail;
                 $oid = $_core->encode($f->organization_id);
                 $uid = $_core->encode($f->user_id);
+
+                if($org_status == "IN-ACTIVE"){
+                    $hyperlinkAttr = ' href="#" data-toggle="modal" data-target="#modalInactiveOrg" ';
+                
+                }else{
+                    $hyperlinkAttr = " href='../_lib/agencyaction.php?action=".$_core->encode('sendInviteToExistingOrg')."&oid=$oid&uid=$uid&aid=$encoded_agency_id' ";
+                }
+
                 $body .= "<tr class=''> 
                           <td> $org_name </td>
                           <td> $user_name </td>
                           <td> $user_mail </td>
-                          <td><a href='../_lib/agencyaction.php?action=".$_core->encode('sendInviteToExistingOrg')."&oid=$oid&uid=$uid&aid=$encoded_agency_id'>Invite</a></td> </tr>";    
+                          <td><a ".$hyperlinkAttr.">Invite</a></td> </tr>";    
             //}
         }
         $body .= '</tbody></table>';
@@ -468,7 +477,7 @@ class Action
         } else {
             $_core = new core();
             $dbh = $this->_db->initDB();
-            $sth = $dbh->query("select id,email from org_users where email='$email'");
+            $sth = $dbh->query("select id,email, (select status from org_contacts where user_id = org_users.id and cp_org_id = org_users.default_agency_id) as user_status from org_users where email='$email'");
     
             $body = '<table style="margin-bottom:0px" class="table table-hover table-bordered table-sm">';
             $body .= '<thead><tr class="">
@@ -479,10 +488,16 @@ class Action
             while ($f = $sth->fetch(PDO::FETCH_OBJ)) {
                     $dataExist = true;
                     $user_mail = $f->email;
+                    $user_status = $f->user_status;
                     $uid = $_core->encode($f->id);
+                    if($user_status && $user_status == "ACTIVE" ){
+                        $hyperlinkAttr = " href='../_lib/agencyaction.php?action=".$_core->encode('sendInviteToExistingContact')."&uid=$uid&aid=$agency_id&oid=$organization_id' ";
+                    }else{
+                        $hyperlinkAttr = ' href="#" data-toggle="modal" data-target="#modalInactiveContact" ';
+                    }
                     $body .= "<tr class=''> 
                               <td> $user_mail </td>
-                              <td><a href='../_lib/agencyaction.php?action=".$_core->encode('sendInviteToExistingContact')."&uid=$uid&aid=$agency_id&oid=$organization_id'>Invite</a></td> </tr>";    
+                              <td><a ".$hyperlinkAttr.">Invite</a></td> </tr>";    
             }
             $body .= '</tbody></table>';
     
