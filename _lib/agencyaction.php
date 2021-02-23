@@ -111,6 +111,16 @@ class Action
             $all_org_data['cp_parent_child'] = $id; // agency_id
             $this->_db->insertUpdateSQL($all_org_data, 'org_information');
             $org_id = $id;
+
+            // insert into org_relationships table
+            $org_relationship_data = [
+                'org_id' => $org_id,
+                'primary_org_id' => $parent_agency,
+                'member_org_id' => $org_id,
+                'is_primary' => '1',
+            ];
+            $this->_db->insertUpdateSQL($org_relationship_data, 'org_relationships');
+
             $this->_db->redir('directory/add_agencycontacts?id=' . $this->_db->encode($id) . '&oid=' . $this->_db->encode($org_id));
         }
     }
@@ -334,6 +344,15 @@ class Action
 
             $this->_db->insertUpdateSQL($org_cp_directory_contact, 'org_contacts');
         }
+
+        // insert into org_relationships table
+        $org_relationship_data = [
+            'org_id' => $orgId,
+            'primary_org_id' => $agencyId,
+            'member_org_id' => ($aidEnc ? $agencyIdInvited : $org_id),
+            'is_primary' => '0',
+        ];
+        $this->_db->insertUpdateSQL($org_relationship_data, 'org_relationships');
 
         //NOTIFICATION
         $_agency = new agency();

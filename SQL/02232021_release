@@ -1,0 +1,64 @@
+
+--
+-- Table structure for table `org_relationships`
+--
+
+CREATE TABLE `org_relationships` (
+  `id` int(11) NOT NULL,
+  `org_id` int(11) DEFAULT NULL,
+  `primary_org_id` int(11) DEFAULT NULL COMMENT 'cp_parent_agency (agency who invited the org)',
+  `member_org_id` int(11) DEFAULT NULL COMMENT 'cp_parent_child (Org/Agency who got invite)',
+  `is_primary` int(11) DEFAULT NULL COMMENT 'is this the first one to invite',
+  `level_1` tinytext NOT NULL,
+  `partner_type` tinytext NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `org_relationships`
+--
+ALTER TABLE `org_relationships`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `org_relationships`
+--
+ALTER TABLE `org_relationships`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `org_relationships` CHANGE `level_1` `level_1` TINYTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+ALTER TABLE `org_relationships` CHANGE `partner_type` `partner_type` TINYTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+
+
+
+
+CREATE OR REPLACE VIEW  cp_search_orgs_and_locations AS
+select `org_information`.`cp_parent_child` AS `id`,`org_information`.`cp_parent_child` AS `agency_id`,
+(case when (`org_information`.`cp_parent_agency` = -(1)) then `org_information`.`cp_parent_child` else `org_information`.`cp_parent_agency` end) AS `parent_agency`,
+`org_information`.`name` AS `agency_name`,`org_information`.`level_1` AS `level_1`,`org_information`.`address` AS `agency_address`,
+`org_information`.`city` AS `agency_city`,`org_information`.`state` AS `agency_state`,`org_information`.`zipcode` AS `agency_zipcode`,
+`org_information`.`org_phone` AS `agency_telephone`,`org_information`.`status` AS `status`,
+`org_information`.`cp_partner_type` AS `partner_type`,'ORG' AS `org_type` from `org_information`
+union
+select concat('L-',`ab`.`id`) AS `id`,(select `cda`.`cp_parent_child` AS `agency_id` from `org_information` `cda`
+where (`ab`.`agency_id` = `cda`.`cp_parent_child`) limit 1) AS `agency_id`,
+(select (case when (`cda`.`cp_parent_agency` = -(1)) then `cda`.`cp_parent_child` else `cda`.`cp_parent_agency` end) from `org_information` `cda`
+where (`ab`.`agency_id` = `cda`.`cp_parent_child`) limit 1) AS `parent_agency`,`ab`.`location_name` AS `location_name`,
+`ab`.`level_1` AS `level_1`,`ab`.`address` AS `address`,`ab`.`city` AS `city`,`ab`.`state` AS `state`,`ab`.`zip_code` AS `zip_code`,
+`ab`.`phone` AS `phone`,`ab`.`status` AS `status`,(select `cda`.`cp_partner_type` AS `partner_type` from `org_information` `cda`
+where (`ab`.`agency_id` = `cda`.`cp_parent_child`) limit 1) AS `partner_type`,'LOCATION' AS `org_type` from `cp_directory_agency_locations` `ab`
+union
+select `org_relationships`.`member_org_id` AS `id`,`org_relationships`.`member_org_id` AS `agency_id`, `org_relationships`.`primary_org_id` AS `parent_agency`,
+`org_information`.`name` AS `agency_name`,`org_information`.`level_1` AS `level_1`,`org_information`.`address` AS `agency_address`,
+`org_information`.`city` AS `agency_city`,`org_information`.`state` AS `agency_state`,`org_information`.`zipcode` AS `agency_zipcode`,
+`org_information`.`org_phone` AS `agency_telephone`,`org_information`.`status` AS `status`,
+`org_information`.`cp_partner_type` AS `partner_type`,'ORG' AS `org_type` from `org_information`
+join org_relationships on `org_information`.`id` = org_relationships.id where is_primary = '0'
