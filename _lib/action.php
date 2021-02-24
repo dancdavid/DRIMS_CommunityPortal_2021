@@ -1203,7 +1203,7 @@ class Action {
         }
 
         $err = urlencode("Profile Updated");
-        $_db->redir('directory/editmyprofile?e=' . $err);
+        $_db->redir('directory/editmyprofile?oid='.$current_org_id_encoded.'&e=' . $err);
     }
 
     public function AddLink()
