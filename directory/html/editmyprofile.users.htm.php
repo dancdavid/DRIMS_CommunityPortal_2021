@@ -2,7 +2,9 @@
 $_level = new Level1();
 $_users = new users();
 $_agency = new agency();
+$_core = new core();
 $f = $_users->GetMyProfile();
+$agency_name = $_agency->get_agency_name($_core->decode($_GET['oid']));
 $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
 ?>
 
@@ -126,6 +128,13 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                     if($f['default_agency_id']){ 
                         // if default agency is set then only run the below code
                 ?>
+              
+                <div class="form-group" style="margin-bottom:0px;margin-top:50px;">
+                    <div class="col-sm-5 col-sm-offset-1" id="">
+                     <p> <strong>Current CP preference - <?php echo $agency_name; ?> </strong></p>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <div class="col-sm-5 col-sm-offset-1" id="emailDiv">
                         <label for="level1" class="control-label"><?= $_SESSION['Level1_Label'] ?></label>
