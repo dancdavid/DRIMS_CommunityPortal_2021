@@ -182,7 +182,7 @@
                     $upper_data = '';
                     $lower_data = '';
                     $default_agency_id = '';
-
+                    $currently_active_org = ''; 
                     foreach($accessData as $u_access){
                         $u_id = $u_access['user_id'];
                         $o_id = $u_access['org_id'];
@@ -208,6 +208,7 @@
                             //$_SESSION['orgID'] = $default_org_id;
                             if($community_portal_access){
                                 $upper_data .= '<li><a class="dropdown-item access-login '.$current_org_class.'"  redirect-url="'.ROOT_URL.'directory" attr-portal-type="CP" attr-oid="'.$encoded_org_id.'" href="javascript:void(0)"> '.$portal_org_type.$org_name.' (Community Portal)</a><li><hr/>';
+                                $currently_active_org = $encoded_org_id;
                             }
                             if($case_management_access){
                                 $lower_data .= '<li><a class="dropdown-item" href="'.$root_cms_url.'">'.$portal_org_type.$org_name.' (Case Management)</a><li>';
@@ -232,7 +233,7 @@
                 <li class="dropdown">
                     <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog"></span> Welcome <?= $_SESSION['user_name']; ?> </a>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="editmyprofile">My Profile</a></li>
+                        <li><a href="editmyprofile?oid=<?php echo $currently_active_org;?>">My Profile</a></li>
                         <?php if(($upper_data || $lower_data) && $default_agency_id){ ?>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle access-link" id="access_management" data-toggle="dropdown">Access Management<span class="caret"></span></a>

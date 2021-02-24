@@ -1130,8 +1130,10 @@ class Action {
 
     public function UpdateMyProfile()
     {
-        global $_db;
-
+        global $_db , $_core;
+        
+        $current_org_id_encoded = $_GET['oid'];
+        $current_org_id = $_core->decode($current_org_id_encoded);
         $level1 = implode(";",$_POST['level_1']);
         $user_id = $_SESSION['user_id'];
         $default_agency_id = '';
@@ -1170,13 +1172,13 @@ class Action {
 
         $_SESSION['level_1_filter'] = $level1;
 
-        if($default_agency_id){
+        if(true){
             // if default agency id exist then update lvel_1 and notification data in contacts table and update SESSION values
             $dbh = $_db->initDB();
             $qry = "SELECT c.id , c.cp_user_level, c.cp_access_level , c.cp_community_portal_user_type, c.cms_access , c.cp_access
                     FROM org_users as u 
                     LEFT JOIN org_contacts as c ON u.id =  c.user_id  
-                    WHERE u.id = {$user_id} and cp_org_id = {$default_agency_id} and cp_org_id IS NOT NULL";
+                    WHERE u.id = {$user_id} and cp_org_id = {$current_org_id} and cp_org_id IS NOT NULL";
             $sth = $dbh->query($qry);
             $f = $sth->fetch(PDO::FETCH_OBJ);
             // update session
@@ -1195,7 +1197,7 @@ class Action {
                 'cp_level_1' => $level1,
                 'cp_notification' => $_POST['cp_notification']
             ];   
-           
+          
             $_db->insertUpdateSQL($u_data, 'org_contacts');
     
         }

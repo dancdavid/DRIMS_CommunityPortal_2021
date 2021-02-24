@@ -13,7 +13,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
 <?php } ?>
 
 <div class="col-sm-12 col-xs-12">
-    <form class="form-horizontal" id="editUser" role="form" method="post" action="../_lib/action.php?action=<?php echo $_users->encode('UpdateMyProfile'); ?>">
+    <form class="form-horizontal" id="editUser" role="form" method="post" action="../_lib/action.php?action=<?php echo $_users->encode('UpdateMyProfile'); ?>&oid=<?php echo $_GET['oid']; ?>">
         <div class="panel panel-danger">
             <div class="panel-heading">
                 <div class="panel-title">

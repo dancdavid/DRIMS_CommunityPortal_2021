@@ -32,7 +32,7 @@ if (isset($_COOKIE['vcp'])) {
         $_SESSION['user_type'] = $_core->decode($cookie[8]);
         $_SESSION['user_name'] = $_core->decode($cookie[9]);
         $_SESSION['user_email'] = $_core->decode($cookie[10]);
-        $_SESSION['level_1'] = $_core->decode($cookie[11]);
+        //$_SESSION['level_1'] = $_core->decode($cookie[11]);
         $_SESSION['cp_user_level'] = $_core->decode($cookie[12]);
     }
 }

@@ -345,7 +345,7 @@ class db extends core
         if($portal_type == "CP"){
             // goto CP
             $dbh = $this->initDB();
-            $qry = "SELECT c.id , c.cp_user_level, c.cp_access_level , c.cp_community_portal_user_type, c.cms_access , c.cp_access
+            $qry = "SELECT c.id , c.cp_user_level, c.cp_level_1 , c.cp_access_level , c.cp_community_portal_user_type, c.cms_access , c.cp_access
                     FROM org_users as u 
                     LEFT JOIN org_contacts as c ON u.id =  c.user_id  
                     WHERE u.id = {$user_id} and cp_org_id = {$org_id} and cp_org_id IS NOT NULL";
@@ -358,7 +358,10 @@ class db extends core
             $_SESSION['user_type'] = $f->cp_community_portal_user_type;
             $_SESSION['cp_user_level'] = $f->cp_user_level;
             $_SESSION['agency_id'] = $org_id;
+            $_SESSION['level_1'] = $f->cp_level_1;
+            $_SESSION['level_1_filter'] = $_SESSION['level_1'];
             $qry = 'CP LOGIN SUCCESS';
+           
         }
 
         return $qry;
