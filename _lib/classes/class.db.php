@@ -181,7 +181,10 @@ class db extends core
             if ($sth->rowCount() <= 0) {
                 $e = urlencode("Invalid Username or Password!");
                 $link = "$landingPage/?e=$e";
-            } else {
+            } else if($r->status == "IN-ACTIVE"){
+                $e = 'IN-ACTIVE';
+                $link = "$landingPage/?e=$e";
+            }else {
                     # get user and its related agency data
                     $qry = "SELECT u.id,u.first_name,u.last_name,u.email,u.default_org_id,u.default_portal_type, u.homescreen_org_id , u.default_agency_id , c.cp_org_id, c.cp_user_level, c.cp_access_level, c.cp_instance_id, c.cp_community_portal_user_type,
                     c.cp_contact_type, c.cp_level_1, c.contact_license_type, c.cp_notification , c.status, c.cp_org_id , c.cp_access as community_portal, c.cms_access as case_management

@@ -69,6 +69,8 @@ $landing_page = count($segments) ? $segments[0] : 'mycommunitycares';
                     $err = 'You do not appear to have access to this instance of DRIMS Community Portal. Try to login again or contact DRIMS Customer Support for additional help: <a href="mailto:support@drims.atlassian.net?subject=Problem Logging in" target="_blank">Contact Support</a>.';
                 }else if($_GET['e'] === 'incorrecturl'){
                     $err = 'The DRIMS Community Portal instance you are looking for does not exist or is no longer available. If you feel there is a technical issue please contact DRIMS Support <a href="mailto:support@drims.atlassian.net?subject=Problem Logging in" target="_blank">Contact Support</a>.';
+                }else if($_GET['e'] === 'IN-ACTIVE'){
+                    $err = 'You do not appear to have any access. Please contact Administrator.';
                 }else{
                     $err = $_GET['e'];
                 }
