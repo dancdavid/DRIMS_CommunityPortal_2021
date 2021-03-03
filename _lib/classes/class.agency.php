@@ -35,7 +35,7 @@ class agency
         $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.cms_org_id, org_contacts.cp_org_id , 
         (CASE WHEN cp_parent_agency IS NOT NULL THEN 'CP' ELSE 'CMS' END) as portal_type,
         (CASE WHEN cp_parent_agency IS NOT NULL THEN 'Agency' ELSE 'Organization' END) as portal_org_type,
-        (CASE WHEN cp_org_id IS NOT NULL THEN cp_org_id ELSE cms_org_id END) as org_id,
+        (CASE WHEN cp_org_id IS NOT NULL AND cp_org_id != 0 THEN cp_org_id ELSE cms_org_id END) as org_id,
         org_contacts.status, org_contacts.cms_access_level , org_users.default_org_id, 
         org_users.default_portal_type, org_users.default_agency_id,org_users.homescreen_org_id, org_contacts.cp_access as community_portal, 
         org_contacts.cms_access as case_management , org_information.name as org_name, 
@@ -43,7 +43,10 @@ class agency
         org_information.case_management as org_case_management from 
         org_contacts left join 
         org_users on org_contacts.user_id = org_users.id 
-        left join org_information on org_information.id = org_contacts.cms_org_id or org_information.cp_parent_child = org_contacts.cp_org_id where org_users.id = {$user_id} order by org_contacts.id asc");
+        left join org_information on org_information.id = org_contacts.cms_org_id or org_information.cp_parent_child = org_contacts.cp_org_id 
+        where org_users.id = {$user_id} 
+        and org_contacts.status = 'ACTIVE' 
+        order by org_contacts.id asc");
        
         return $sth ? $sth->fetchAll(PDO::FETCH_ASSOC) : [];
     }
