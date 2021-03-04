@@ -84,7 +84,7 @@ $landing_page = count($segments) ? $segments[0] : 'mycommunitycares';
             <input type="hidden" name="landing_page" id="landing_page"  value="<?= $landing_page ?>">
             <div class="form-group" style="text-align:center;">
                 <div class="col-sm-offset-4 col-sm-4" style="text-align:center;">
-                    <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" required>
+                    <input type="email" class="form-control" id="email" value="<?php echo (isset($_GET['em']) ? $_GET['em'] : '')?>" name="email" placeholder="Email Address" required>
                 </div>
             </div>
             <div class="form-group">

@@ -63,12 +63,12 @@ class notification
         $this->mail->IsSMTP(); //local
 //        $this->mail->isSendMail();
         $this->mail->SMTPDebug = 1;
-        $this->mail->SMTPSecure = "tls";
-        $this->mail->Host = "smtp.ionos.com";
-        $this->mail->Port = '587';
+        $this->mail->SMTPSecure = "ssl";
+        $this->mail->Host = "smtp.mail.us-west-2.awsapps.com";
+        $this->mail->Port = '465';
         $this->mail->SMTPAuth = true;
         $this->mail->Username = "noreply@drims.org";
-        $this->mail->Password = "DRIMS2018v2*";
+        $this->mail->Password = "qaDRIMS123*";
         $this->mail->From = $this->fromEmailTemp;
         $this->mail->FromName = $this->fromName;
         $this->mail->AddReplyTo($this->addReplyToTemp);
@@ -210,10 +210,14 @@ class notification
     {
         $body = $this->html_header();
 
+     
+        $org_custom_url = '';
+        $login_url = "<a href='" . ROOT_URL . "$org_custom_url?em=".$this->sendToEmail."'>" . ROOT_URL . "$org_custom_url?em=".$this->sendToEmail."</a><br>";
+       
         $body .= "<p>Dear " . $this->sendToName . ",</p>";
-        $body .= "<p>You have been added you to {$this->agencyName} Connection Portal powered by DRIMS.</p>";
+        $body .= "<p>You have been added to {$this->agencyName} Connection Portal powered by DRIMS.</p>";
         $body .= "<p>Requestor: {$this->sentByName} from {$this->sentByAgency}</p>";
-        $body .= "<a href='" . ROOT_CMS_URL . "osignin?em=" . $this->sendToEmail . "'>" . ROOT_CMS_URL . "osignin?em=" . $this->sendToEmail . "</a><br>";
+        $body .= $login_url;
         $body .= "Password: " . $this->tempPassword;
 
         $body .= "<br><br>";

@@ -843,7 +843,8 @@ class Action
             "created_date" => $this->currentDateTime,
             "created_by" => $_SESSION['user_id'],
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
-            "agency_id" => $agencyId
+            "agency_id" => $agencyId,
+            "default_agency_id"=> $agencyId
         ];
 
 //        $this->debugData($data);
@@ -971,7 +972,8 @@ class Action
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
             "community_portal" => 1,
             "case_management" => 0,
-            "agency_id" => $agencyId
+            "agency_id" => $agencyId,
+            "default_agency_id"=> $agencyId
         ];
 
 //        $this->debugData($data);
