@@ -844,7 +844,8 @@ class Action
             "created_by" => $_SESSION['user_id'],
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
             "agency_id" => $agencyId,
-            "default_agency_id"=> $agencyId
+            "default_agency_id"=> $agencyId,
+            "default_portal_type"=> 'CP'
         ];
 
 //        $this->debugData($data);
@@ -973,7 +974,8 @@ class Action
             "community_portal" => 1,
             "case_management" => 0,
             "agency_id" => $agencyId,
-            "default_agency_id"=> $agencyId
+            "default_agency_id"=> $agencyId,
+            "default_portal_type"=> 'CP'
         ];
 
 //        $this->debugData($data);
