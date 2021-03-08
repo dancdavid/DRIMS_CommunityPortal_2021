@@ -126,14 +126,22 @@ class db extends core
         $data_fields = explode(";", $result);
 
         if (isset($data)) {
-            $html .= "<option selected value='$data'>$data</option>";
-            $html .= "<optgroup label='------'></optgroup>";
+            if($field_name == 'cp_user_status'){
+                $html .= "<option value=''>-------</option>";
+            }else{
+                $html .= "<option selected value='$data'>$data</option>";
+                $html .= "<optgroup label='------'></optgroup>";
+            }
         } else {
             $html .= "<option value='' selected></option>";
         }
 
         foreach ($data_fields as $val) {
-            $html .= "<option value='" . strtoupper($val) . "'>" . strtoupper($val) . "</option>";
+            if($field_name == 'cp_user_status'){
+                $html .= "<option ".(($val == $data) ? 'selected' : '')." value='" . $val . "'>" . $val . "</option>";
+            }else{
+                $html .= "<option value='" . strtoupper($val) . "'>" . strtoupper($val) . "</option>";
+            }
         }
 
         return $html;

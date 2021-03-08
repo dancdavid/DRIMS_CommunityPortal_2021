@@ -918,6 +918,7 @@ class Action
 
         $agencyEnc = $this->_db->gpGet('aid');
         $agencyId = $this->_db->decode($agencyEnc);
+        $status = $_POST['status'];
 
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
@@ -928,7 +929,7 @@ class Action
             "email" => $email,
             "phone" => $_POST['phone'],
             "alt_phone" => $_POST['alt_phone'],
-            "status" => $_POST['status'],
+            //"status" => $_POST['status'],
             "updated_by" => $_SESSION['user_id'],
             "updated_date" => $this->currentDateTime,
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
@@ -938,7 +939,7 @@ class Action
         $this->_db->insertUpdateSQL($data, 'org_users');
 
         $qry = "update org_contacts 
-        SET cp_level_1 = '$level_1'
+        SET cp_level_1 = '$level_1' , status = '$status'
         where cp_org_id = '$agencyId' AND user_id = '$userId' ";
         $sth = $this->_dbh->prepare($qry);
         $sth->execute();
@@ -1047,6 +1048,7 @@ class Action
 
         $agencyEnc = $this->_db->gpGet('aid');
         $agencyId = $this->_db->decode($agencyEnc);
+        $status = $_POST['status'];
 
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
@@ -1057,7 +1059,7 @@ class Action
             "email" => $email,
             "phone" => $_POST['phone'],
             "alt_phone" => $_POST['alt_phone'],
-            "status" => $_POST['status'],
+            //"status" => $_POST['status'],
             "updated_by" => $_SESSION['user_id'],
             "updated_date" => $this->currentDateTime,
             "ip_addr" => $_SERVER['REMOTE_ADDR'],
@@ -1069,7 +1071,7 @@ class Action
         // update org_contacts
         $qry = "update org_contacts 
         set
-        cp_level_1 = '$level_1'
+        cp_level_1 = '$level_1' , status = '$status'
         where cp_org_id = '$agencyId' AND user_id = '$userId' ";
 
         $sth = $this->_dbh->prepare($qry);
