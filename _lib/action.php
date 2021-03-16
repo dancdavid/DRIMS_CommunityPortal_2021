@@ -1137,6 +1137,7 @@ class Action {
         $level1 = implode(";",$_POST['level_1']);
         $user_id = $_SESSION['user_id'];
         $default_agency_id = '';
+        $set_new_primary = $_POST['set_new_primary']; // Yes | No
         $default_homescreen = isset($_POST['default_homescreen']) ? $_POST['default_homescreen'] : '';
         $data = [
             'id' => $user_id,
@@ -1205,9 +1206,31 @@ class Action {
     
         }
 
+        if($default_homescreen && $set_new_primary == 'Yes'){
+            $this->setNewPrimary($user_id, $homescreen_org_id, $default_portal_type);
+        }
+
         $err = urlencode("Profile Updated");
         $redirect_org_id  =  $current_org_id_encoded ? $current_org_id_encoded : $_core->encode($homescreen_org_id);
         $_db->redir('directory/editmyprofile?oid='.$redirect_org_id.'&e=' . $err);
+    }
+
+    public function setNewPrimary($user_id, $homescreen_org_id, $default_portal_type){
+
+        global $_db;
+
+        // set all to zero first
+        $dbh = $_db->initDB();
+        $qry = "update org_contacts set is_primary = 0  where user_id = '$user_id'";
+        $dbh->query($qry);
+
+        $column = ($default_portal_type == 'CP' ? "cp_org_id" : "cms_org_id" );
+
+        // set newly selected as primary
+        $dbh = $_db->initDB();
+        $qry = "update org_contacts set is_primary = 1  where user_id = '$user_id' and  $column = $homescreen_org_id ";
+        $dbh->query($qry);
+
     }
 
     public function AddLink()

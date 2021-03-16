@@ -14,6 +14,13 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
     </div>
 <?php } ?>
 
+<?php if(isset($_GET['msg'])){ ?>
+<div class="alert alert-danger alert-dismissible">
+    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+    <strong>Warning!</strong> Your account is no longer associated to your Primary org. You will need to select a new primary org first to continue.
+</div>
+<?php } ?>
+
 <div class="col-sm-12 col-xs-12">
     <form class="form-horizontal" id="editUser" role="form" method="post" action="../_lib/action.php?action=<?php echo $_users->encode('UpdateMyProfile'); ?>&oid=<?php echo $_GET['oid']; ?>">
         <div class="panel panel-danger">
@@ -31,7 +38,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
             </div>
 
             <div class="row" style="font-size:12px;">
-
+                <input type="hidden" name="set_new_primary" class="form-control " id="set_new_primary" value="<?php echo (isset($_GET['msg']) ? "Yes" : "No"); ?>" >
                 <div class="form-group">
                     <div class="col-sm-5 col-sm-offset-1">
                         <label for="first_name" class="control-label">Name</label>

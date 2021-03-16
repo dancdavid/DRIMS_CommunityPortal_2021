@@ -232,7 +232,7 @@ class db extends core
                 else if($rows && empty((array)$f)){
                         # if data exist in org_contacts table and default agency is not set then redirect to editprofile section 
                         # to set a default agency first
-                        $link = $this->setSessionAndGetLink($r, $landingPage);
+                        $link = $this->setSessionAndGetLink($r, $landingPage, $isDefaultSet = false);
                         
                 }
                 else if ($f->status !== 'ACTIVE')
@@ -243,7 +243,7 @@ class db extends core
                         $link = "$landingPage/?e=$e";
                     }else{
                         # if default agency is set but the user IN-ACTIVE for that default Org but ACTIVE for some other Org then redirect to editprofile section 
-                        $link = $this->setSessionAndGetLink($r, $landingPage);
+                        $link = $this->setSessionAndGetLink($r, $landingPage, $isDefaultSet = true);
                     }
                 }
                 else {
@@ -344,9 +344,10 @@ class db extends core
         }
     }
 
-    public function setSessionAndGetLink($r, $landingPage){
+    public function setSessionAndGetLink($r, $landingPage, $isDefaultSet){
 
-        $link = 'directory/editmyprofile?err=Please set a default agency first to continue';
+        $extra = ($isDefaultSet ? '&msg=Set New Primary' : '');
+        $link = 'directory/editmyprofile?err=Please set a default agency first to continue'.$extra;
         $_SESSION['v'] = CRYPT_KEY . session_id() . C_24_KEY;
         $_SESSION['userID'] = $r->id;
         $_SESSION['orgID'] = $r->default_org_id;
