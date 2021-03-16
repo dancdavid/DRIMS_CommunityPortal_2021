@@ -1180,7 +1180,8 @@ class Action {
                     LEFT JOIN org_contacts as c ON u.id =  c.user_id  
                     WHERE u.id = {$user_id} and cp_org_id = {$current_org_id} and cp_org_id IS NOT NULL";
             $sth = $dbh->query($qry);
-            $f = $sth->fetch(PDO::FETCH_OBJ);
+            $result = $sth;
+            $f = $sth ? $sth->fetch(PDO::FETCH_OBJ) : [];
             // update session
             /*$_SESSION['userLevel'] = $f->cp_access_level;
             $_SESSION['cp_access'] = $f->cp_access;
@@ -1191,19 +1192,22 @@ class Action {
             $_SESSION['agency_id'] = $default_agency_id;*/
 
             // update org_contacts table
-            $org_contacts_id = $f->id;
-            $u_data = [
-                'id' => $org_contacts_id,
-                'cp_level_1' => $level1,
-                'cp_notification' => $_POST['cp_notification']
-            ];   
-          
-            $_db->insertUpdateSQL($u_data, 'org_contacts');
+            if($result){
+                $org_contacts_id = $f->id;
+                $u_data = [
+                    'id' => $org_contacts_id,
+                    'cp_level_1' => $level1,
+                    'cp_notification' => $_POST['cp_notification']
+                ];   
+              
+                $_db->insertUpdateSQL($u_data, 'org_contacts');
+            }
     
         }
 
         $err = urlencode("Profile Updated");
-        $_db->redir('directory/editmyprofile?oid='.$current_org_id_encoded.'&e=' . $err);
+        $redirect_org_id  =  $current_org_id_encoded ? $current_org_id_encoded : $_core->encode($homescreen_org_id);
+        $_db->redir('directory/editmyprofile?oid='.$redirect_org_id.'&e=' . $err);
     }
 
     public function AddLink()

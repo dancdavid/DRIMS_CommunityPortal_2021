@@ -63,6 +63,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                         $org_invite_type = '';
                         $u_id = $u_access['user_id'];
                         $o_id = $u_access['org_id'];
+                        $is_primary = $u_access['is_primary'];
                         $default_org_id = $u_access['homescreen_org_id'];
                         $default_portal_type = $u_access['default_portal_type'];
                         $community_portal_access = $u_access['community_portal'];
@@ -75,7 +76,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                         $default_portal_type = ($default_portal_type ? $default_portal_type : 'CMS'); // if default portal not defined then set it to CMS
                         $portal_type = '';
 
-                        if(!$key){
+                        if($is_primary){
                             # first organization who invited the user is the primary org
                             $org_invite_type = ' [ Primary Account ] ';
                         }
@@ -125,7 +126,7 @@ $notificationChk = ($f['cp_notification'] === 'YES') ? 'checked' : '';
                 </div>
 
                 <?php 
-                    if($f['default_agency_id']){ 
+                    if($f['default_agency_id'] && $agency_name){ 
                         // if default agency is set then only run the below code
                 ?>
               

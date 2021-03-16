@@ -610,7 +610,8 @@ class Action
                     // save data in org_contacts table
                     $org_contacts_data = [
                         'cp_org_id'=> $agencyId,
-                        'user_id'=> $admin_user_id, 
+                        'user_id'=> $admin_user_id,
+                        'is_primary' => 1,
                         'status'=> $user_status, 
                         'cms_access_level'=> $user_level,
                         'cp_user_level'=>$cp_user_level,
@@ -708,7 +709,7 @@ class Action
             'phone' => $_POST['phone'],
             "extension" => $_POST['extension'],
             'alt_phone' => $_POST['alt_phone'],
-            'status' => $user_status,
+            //'status' => $user_status,
             'updated_date' => $this->currentDateTime,
             'updated_by' => $_SESSION['user_id']
         ];

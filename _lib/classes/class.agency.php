@@ -32,7 +32,7 @@ class agency
 
     public function getUserAccess($user_id){
         
-        $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.cms_org_id, org_contacts.cp_org_id , 
+        $sth = $this->dbh->query("select org_contacts.user_id, org_contacts.is_primary, org_contacts.cms_org_id, org_contacts.cp_org_id , 
         (CASE WHEN cp_parent_agency IS NOT NULL THEN 'CP' ELSE 'CMS' END) as portal_type,
         (CASE WHEN cp_parent_agency IS NOT NULL THEN 'Agency' ELSE 'Organization' END) as portal_org_type,
         (CASE WHEN cp_org_id IS NOT NULL AND cp_org_id != 0 THEN cp_org_id ELSE cms_org_id END) as org_id,

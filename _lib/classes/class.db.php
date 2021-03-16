@@ -204,6 +204,8 @@ class db extends core
                     $rows = $sth->rowCount();
                     $f = new stdClass;
                     $hasCommunityPortalAccess = 0;
+                    $inactiveOrgCount = 0;
+                    $totaOrgs = 0;
                     while($t = $sth->fetch(PDO::FETCH_OBJ)){
                         # default_agency_id = cp_org_id and cp_org_id IS NOT NULL
                         if($t->default_agency_id == $t->cp_org_id && $t->cp_org_id){
@@ -214,6 +216,13 @@ class db extends core
                             # check if community_portal access exist
                             $hasCommunityPortalAccess = $t->community_portal;
                         }
+
+                        if ($t->status !== 'ACTIVE'){
+                            // inactive org count
+                            $inactiveOrgCount++;
+                        }
+
+                        $totaOrgs++; // total org count
                     }
                 if(!$hasCommunityPortalAccess){
                     # If the user do not have access to CP 
@@ -223,28 +232,19 @@ class db extends core
                 else if($rows && empty((array)$f)){
                         # if data exist in org_contacts table and default agency is not set then redirect to editprofile section 
                         # to set a default agency first
-                        $link = 'directory/editmyprofile?err=Please set a default agency first to continue';
-                        $_SESSION['v'] = CRYPT_KEY . session_id() . C_24_KEY;
-                        $_SESSION['userID'] = $r->id;
-                        $_SESSION['orgID'] = $r->default_org_id;
-                        $_SESSION['user_id'] = $r->id;
-                        $_SESSION['agency_id'] = $r->default_agency_id;
-                        $_SESSION['user_name'] = $r->first_name . ' ' . $r->last_name;
-                        $_SESSION['user_email'] = $r->email;
-                        $_SESSION['landing_page'] = $landingPage;
-                        $_SESSION['userLevel'] = '';
-                        $_SESSION['cp_access'] = '';
-                        $_SESSION['cms_access'] = '';
-                        $_SESSION['user_type'] = '';
-                        $_SESSION['level_1'] = '';
-                        $_SESSION['cp_user_level'] = 0;
-                        //$_SESSION['parent_agency'] = '';
+                        $link = $this->setSessionAndGetLink($r, $landingPage);
                         
                 }
                 else if ($f->status !== 'ACTIVE')
                 {
-                    $e = 'contactsupport';
-                    $link = "$landingPage/?e=$e";
+                    if($inactiveOrgCount == $totaOrgs){
+                        # if the user is IN-ACTIVE for all the Orgs he is related to
+                        $e = 'contactsupport';
+                        $link = "$landingPage/?e=$e";
+                    }else{
+                        # if default agency is set but the user IN-ACTIVE for that default Org but ACTIVE for some other Org then redirect to editprofile section 
+                        $link = $this->setSessionAndGetLink($r, $landingPage);
+                    }
                 }
                 else {
                  
@@ -343,6 +343,29 @@ class db extends core
 
         }
     }
+
+    public function setSessionAndGetLink($r, $landingPage){
+
+        $link = 'directory/editmyprofile?err=Please set a default agency first to continue';
+        $_SESSION['v'] = CRYPT_KEY . session_id() . C_24_KEY;
+        $_SESSION['userID'] = $r->id;
+        $_SESSION['orgID'] = $r->default_org_id;
+        $_SESSION['user_id'] = $r->id;
+        $_SESSION['agency_id'] = $r->default_agency_id;
+        $_SESSION['user_name'] = $r->first_name . ' ' . $r->last_name;
+        $_SESSION['user_email'] = $r->email;
+        $_SESSION['landing_page'] = $landingPage;
+        $_SESSION['userLevel'] = '';
+        $_SESSION['cp_access'] = '';
+        $_SESSION['cms_access'] = '';
+        $_SESSION['user_type'] = '';
+        $_SESSION['level_1'] = '';
+        $_SESSION['cp_user_level'] = 0;
+
+        return $link;
+
+    }
+
 
     public function switchOrganization($org_id, $user_id, $portal_type){
         $qry = '';
